@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th3 22, 2026 lúc 02:52 AM
+-- Thời gian đã tạo: Th3 22, 2026 lúc 04:49 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -44,6 +44,28 @@ INSERT INTO `students` (`id`, `name`, `email`, `phone`) VALUES
 (3, 'Le Van C', 'clv@example.com', '0987654321'),
 (4, 'tinhvan', 'tinhlu703@gmail.com', '0818177533');
 
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `username`, `password`, `created_at`) VALUES
+(1, 'Lữ Văn Tính', 'tinh@gmail.com', '$2y$10$P1m.VOlnrsswa2Ii8Q0Mgud39hAxjmM/o.Y/QbLYSDjyrQ8FJzI0i', '2026-03-22 03:25:15'),
+(2, 'admin', 'admin@gmail.com', '$2y$10$O8ew12//fD7oH4D.nzQG1eCxlwJ6tuQW7E8ZNlYKhrt5R0Rsfgoyi', '2026-03-22 03:28:33');
+
 --
 -- Chỉ mục cho các bảng đã đổ
 --
@@ -55,6 +77,13 @@ ALTER TABLE `students`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Chỉ mục cho bảng `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
 -- AUTO_INCREMENT cho các bảng đã đổ
 --
 
@@ -63,6 +92,12 @@ ALTER TABLE `students`
 --
 ALTER TABLE `students`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT cho bảng `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
