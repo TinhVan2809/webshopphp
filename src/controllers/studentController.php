@@ -3,7 +3,7 @@
 namespace Tinhl\Bai01QuanlySv\Controllers;
 
 use Tinhl\Bai01QuanlySv\models\StudentModel;
-
+use Tinhl\Bai01QuanlySv\Core\FlashMessage;
 
 class StudentController
 {
@@ -32,11 +32,19 @@ class StudentController
                 !empty($phone)
             ) {
 
-                $this->studentModel->addStudent(
+                $isAdded = $this->studentModel->addStudent(
                     $name,
                     $email,
                     $phone
                 );
+
+                if ($isAdded) {
+                    FlashMessage::set('student_action', 'Thêm sinh viên thành công!', 'success');
+                } else {
+                    FlashMessage::set('student_action', 'Thêm sinh viên thất bại!', 'error');
+                }
+            } else {
+                FlashMessage::set('student_action', 'Thêm sinh viên thất bại!', 'error');
             }
         }
         // Sau khi thêm, chuyển hướng về trang danh sách

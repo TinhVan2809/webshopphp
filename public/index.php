@@ -35,6 +35,9 @@ switch ($action) {
     case 'index':
         $controller->index();
         break;
+    case 'add':
+        $controller->add();
+        break;
     case 'login':
         $controller->showLoginForm();
         break;
