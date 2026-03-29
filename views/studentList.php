@@ -145,6 +145,7 @@ $defaultAvatarUrl = $avatarBaseUrl . '/default-avatar.png';
         <form action="index.php" method="GET">
             <input type="text" name="keyword" placeholder="Tìm kiếm theo tên..." value="<?php echo htmlspecialchars($keyword ?? ''); ?>">
             <button type="submit">Tìm kiếm</button>
+            <a href="index.php?action=dashboard" style="padding: 8px 12px; background-color: #17a2b8; color: white; text-decoration: none; border-radius: 3px;">Xem Thống kê</a>
         </form>
 
         <form action="index.php?action=add" method="POST" enctype="multipart/form-data">

@@ -5,19 +5,43 @@ session_start();
 define('PROJECT_ROOT', dirname(__DIR__));
 // Nạp file autoload của Composer
 use Tinhl\Bai01QuanlySv\Controllers\UserController;
+
 require_once PROJECT_ROOT . '../vendor/autoload.php';
 
 use Tinhl\Bai01QuanlySv\Controllers\StudentController;
 // Simple Router
 $action = $_GET['action'] ?? 'index';
 // Danh sách các action không yêu cầu đăng nhập
-$public_actions = ['login', 'register', 'do_login',
-'do_register'];
+$public_actions = [
+    'login',
+    'register',
+    'do_login',
+    'do_register'
+];
 
-if (!in_array($action, $public_actions) &&
-!isset($_SESSION['user_id'])) {
-header('Location: index.php?action=login');
-exit();
+// Danh sách các action được bảo vệ (yêu cầu đăng nhập)
+$protected_actions = [
+    'index',
+    'edit',
+    'update',
+    'delete',
+    'add',
+    'dashboard'
+];
+if (
+    in_array($action, $protected_actions) &&
+    !isset($_SESSION['user_id'])
+) {
+    header('Location: index.php?action=login');
+    exit();
+}
+
+if (
+    !in_array($action, $public_actions) &&
+    !isset($_SESSION['user_id'])
+) {
+    header('Location: index.php?action=login');
+    exit();
 }
 
 if (in_array($action, [
@@ -34,6 +58,9 @@ if (in_array($action, [
 switch ($action) {
     case 'index':
         $controller->index();
+        break;
+    case 'dashboard':
+        $controller->dashboard();
         break;
     case 'add':
         $controller->add();

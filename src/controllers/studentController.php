@@ -124,4 +124,15 @@ class StudentController
 
         return dirname(__DIR__, 2) . '/public/uploads/avatars';
     }
+
+    /**
+     * Hiển thị trang dashboard thống kê
+     */
+    public function dashboard()
+    {
+        // Gọi model để lấy dữ liệu thống kê
+        $stats = $this->studentModel->getStatistics();
+        // Nạp file view và truyền biến $stats ra
+        require_once PROJECT_ROOT . '/views/dashboard.php';
+    }
 }
