@@ -31,18 +31,19 @@ CREATE TABLE `students` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL
+  `phone` varchar(20) DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `students`
 --
 
-INSERT INTO `students` (`id`, `name`, `email`, `phone`) VALUES
-(1, 'Nguyen Van A', 'anv@example.com', '0901234567'),
-(2, 'Tran Thi B', 'btt@example.com', '0912345678'),
-(3, 'Le Van C', 'clv@example.com', '0987654321'),
-(4, 'tinhvan', 'tinhlu703@gmail.com', '0818177533');
+INSERT INTO `students` (`id`, `name`, `email`, `phone`, `avatar`) VALUES
+(1, 'Nguyen Van A', 'anv@example.com', '0901234567', NULL),
+(2, 'Tran Thi B', 'btt@example.com', '0912345678', NULL),
+(3, 'Le Van C', 'clv@example.com', '0987654321', NULL),
+(4, 'tinhvan', 'tinhlu703@gmail.com', '0818177533', NULL);
 
 -- --------------------------------------------------------
 
