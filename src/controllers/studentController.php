@@ -7,6 +7,8 @@ use Tinhl\Bai01QuanlySv\models\StudentModel;
 
 class StudentController
 {
+    private const STUDENTS_PER_PAGE = 5;
+
     private $studentModel;
 
     public function __construct()
@@ -16,8 +18,20 @@ class StudentController
 
     public function index()
     {
-        $keyword = $_GET['keyword'] ?? null;
-        $students = $this->studentModel->getAllStudents($keyword);
+        $keyword = $this->getKeywordFromQuery();
+        $requestedPage = $this->getPageFromQuery();
+        $sortby = $this->sanitizeSortColumn($_GET['sortby'] ?? 'id');
+        $order = $this->sanitizeSortOrder($_GET['order'] ?? 'desc');
+        $nextOrder = $order === 'asc' ? 'desc' : 'asc';
+        $listData = $this->getStudentListData($keyword, $requestedPage, $sortby, $order);
+
+        $students = $listData['students'];
+        $currentPage = $listData['currentPage'];
+        $perPage = $listData['perPage'];
+        $totalStudents = $listData['totalStudents'];
+        $totalPages = $listData['totalPages'];
+        $listStart = $listData['listStart'];
+        $listEnd = $listData['listEnd'];
         $editingStudent = null;
 
         require_once __DIR__ . '/../../views/studentList.php';
@@ -53,13 +67,13 @@ class StudentController
                 );
 
                 if ($isAdded) {
-                    FlashMessage::set('student_action', 'Thêm sinh viên thành công!', 'success');
+                    FlashMessage::set('student_action', 'Them sinh vien thanh cong!', 'success');
                 } else {
                     $this->deleteAvatarFile($uploadResult['filename']);
-                    FlashMessage::set('student_action', 'Thêm sinh viên thất bại!', 'error');
+                    FlashMessage::set('student_action', 'Them sinh vien that bai!', 'error');
                 }
             } else {
-                FlashMessage::set('student_action', 'Vui lòng nhập đầy đủ thông tin sinh viên.', 'error');
+                FlashMessage::set('student_action', 'Vui long nhap day du thong tin sinh vien.', 'error');
             }
         }
 
@@ -70,23 +84,35 @@ class StudentController
     public function edit()
     {
         $studentId = (int) ($_GET['id'] ?? 0);
+        $keyword = $this->getKeywordFromQuery();
+        $requestedPage = $this->getPageFromQuery();
+        $sortby = $this->sanitizeSortColumn($_GET['sortby'] ?? 'id');
+        $order = $this->sanitizeSortOrder($_GET['order'] ?? 'desc');
+        $nextOrder = $order === 'asc' ? 'desc' : 'asc';
+        $redirectUrl = $this->buildListUrl($requestedPage, $keyword, $sortby, $order);
 
         if ($studentId <= 0) {
-            FlashMessage::set('student_action', 'Không tìm thấy sinh viên cần sửa.', 'error');
-            header('Location: index.php');
+            FlashMessage::set('student_action', 'Khong tim thay sinh vien can sua.', 'error');
+            header('Location: ' . $redirectUrl);
             exit();
         }
 
         $editingStudent = $this->studentModel->getStudentById($studentId);
 
         if (!$editingStudent) {
-            FlashMessage::set('student_action', 'Sinh viên không tồn tại.', 'error');
-            header('Location: index.php');
+            FlashMessage::set('student_action', 'Sinh vien khong ton tai.', 'error');
+            header('Location: ' . $redirectUrl);
             exit();
         }
 
-        $keyword = $_GET['keyword'] ?? null;
-        $students = $this->studentModel->getAllStudents($keyword);
+        $listData = $this->getStudentListData($keyword, $requestedPage, $sortby, $order);
+        $students = $listData['students'];
+        $currentPage = $listData['currentPage'];
+        $perPage = $listData['perPage'];
+        $totalStudents = $listData['totalStudents'];
+        $totalPages = $listData['totalPages'];
+        $listStart = $listData['listStart'];
+        $listEnd = $listData['listEnd'];
 
         require_once __DIR__ . '/../../views/studentList.php';
     }
@@ -102,28 +128,31 @@ class StudentController
         $name = $_POST['name'] ?? '';
         $email = $_POST['email'] ?? '';
         $phone = $_POST['phone'] ?? '';
-
         $course = $_POST['course'] ?? '';
         $class_name = $_POST['class_name'] ?? '';
         $major = $_POST['major'] ?? '';
+        $keyword = trim((string) ($_POST['keyword'] ?? ''));
+        $currentPage = $this->getPositivePage($_POST['page'] ?? 1);
+        $sortby = $this->sanitizeSortColumn($_POST['sortby'] ?? 'id');
+        $order = $this->sanitizeSortOrder($_POST['order'] ?? 'desc');
 
         if ($studentId <= 0) {
-            FlashMessage::set('student_action', 'Không tìm thấy sinh viên cần cập nhật.', 'error');
-            header('Location: index.php');
+            FlashMessage::set('student_action', 'Khong tim thay sinh vien can cap nhat.', 'error');
+            header('Location: ' . $this->buildListUrl($currentPage, $keyword, $sortby, $order));
             exit();
         }
 
         $currentStudent = $this->studentModel->getStudentById($studentId);
 
         if (!$currentStudent) {
-            FlashMessage::set('student_action', 'Sinh viên không tồn tại.', 'error');
-            header('Location: index.php');
+            FlashMessage::set('student_action', 'Sinh vien khong ton tai.', 'error');
+            header('Location: ' . $this->buildListUrl($currentPage, $keyword, $sortby, $order));
             exit();
         }
 
         if (empty($name) || empty($email) || empty($phone)) {
-            FlashMessage::set('student_action', 'Vui lòng nhập đầy đủ thông tin sinh viên.', 'error');
-            header('Location: index.php?action=edit&id=' . $studentId);
+            FlashMessage::set('student_action', 'Vui long nhap day du thong tin sinh vien.', 'error');
+            header('Location: ' . $this->buildEditUrl($studentId, $currentPage, $keyword, $sortby, $order));
             exit();
         }
 
@@ -131,7 +160,7 @@ class StudentController
 
         if (!$uploadResult['success']) {
             FlashMessage::set('student_action', $uploadResult['message'], 'error');
-            header('Location: index.php?action=edit&id=' . $studentId);
+            header('Location: ' . $this->buildEditUrl($studentId, $currentPage, $keyword, $sortby, $order));
             exit();
         }
 
@@ -158,8 +187,8 @@ class StudentController
                 $this->deleteAvatarFile($oldAvatarFile);
             }
 
-            FlashMessage::set('student_action', 'Cập nhật sinh viên thành công!', 'success');
-            header('Location: index.php');
+            FlashMessage::set('student_action', 'Cap nhat sinh vien thanh cong!', 'success');
+            header('Location: ' . $this->buildListUrl($currentPage, $keyword, $sortby, $order));
             exit();
         }
 
@@ -167,23 +196,22 @@ class StudentController
             $this->deleteAvatarFile($uploadResult['filename']);
         }
 
-        FlashMessage::set('student_action', 'Cập nhật sinh viên thất bại!', 'error');
-        header('Location: index.php?action=edit&id=' . $studentId);
+        FlashMessage::set('student_action', 'Cap nhat sinh vien that bai!', 'error');
+        header('Location: ' . $this->buildEditUrl($studentId, $currentPage, $keyword, $sortby, $order));
         exit();
     }
 
     public function delete()
     {
         $studentId = (int) ($_GET['id'] ?? 0);
-        $keyword = $_GET['keyword'] ?? '';
-        $redirectUrl = 'index.php';
-
-        if ($keyword !== '') {
-            $redirectUrl .= '?keyword=' . urlencode($keyword);
-        }
+        $keyword = $this->getKeywordFromQuery();
+        $currentPage = $this->getPageFromQuery();
+        $sortby = $this->sanitizeSortColumn($_GET['sortby'] ?? 'id');
+        $order = $this->sanitizeSortOrder($_GET['order'] ?? 'desc');
+        $redirectUrl = $this->buildListUrl($currentPage, $keyword, $sortby, $order);
 
         if ($studentId <= 0) {
-            FlashMessage::set('student_action', 'KhÃ´ng tÃ¬m tháº¥y sinh viÃªn cáº§n xÃ³a.', 'error');
+            FlashMessage::set('student_action', 'Khong tim thay sinh vien can xoa.', 'error');
             header('Location: ' . $redirectUrl);
             exit();
         }
@@ -191,16 +219,16 @@ class StudentController
         $student = $this->studentModel->getStudentById($studentId);
 
         if (!$student) {
-            FlashMessage::set('student_action', 'Sinh viÃªn khÃ´ng tá»“n táº¡i.', 'error');
+            FlashMessage::set('student_action', 'Sinh vien khong ton tai.', 'error');
             header('Location: ' . $redirectUrl);
             exit();
         }
 
         if ($this->studentModel->deleteStudent($studentId)) {
             $this->deleteAvatarFile($student['avatar'] ?? null);
-            FlashMessage::set('student_action', 'XÃ³a sinh viÃªn thÃ nh cÃ´ng!', 'success');
+            FlashMessage::set('student_action', 'Xoa sinh vien thanh cong!', 'success');
         } else {
-            FlashMessage::set('student_action', 'XÃ³a sinh viÃªn tháº¥t báº¡i!', 'error');
+            FlashMessage::set('student_action', 'Xoa sinh vien that bai!', 'error');
         }
 
         header('Location: ' . $redirectUrl);
@@ -214,6 +242,122 @@ class StudentController
         require_once __DIR__ . '/../../views/dashboard.php';
     }
 
+    public function detail()
+    {
+        $id = $_GET['id'] ?? null;
+
+        if (!$id) {
+            FlashMessage::set('student_action', 'ID sinh vien khong hop le.', 'error');
+            header('Location: index.php');
+            exit();
+        }
+
+        $student = $this->studentModel->getStudentById($id);
+
+        if (!$student) {
+            FlashMessage::set('student_action', 'Khong tim thay sinh vien.', 'error');
+            header('Location: index.php');
+            exit();
+        }
+
+        require_once PROJECT_ROOT . '/views/detail.php';
+    }
+
+    private function getStudentListData(string $keyword, int $requestedPage, string $sortby, string $order): array
+    {
+        $perPage = self::STUDENTS_PER_PAGE;
+        $totalStudents = $this->studentModel->countStudents($keyword);
+        $totalPages = max(1, (int) ceil($totalStudents / $perPage));
+        $currentPage = min(max(1, $requestedPage), $totalPages);
+        $offset = ($currentPage - 1) * $perPage;
+        $students = $this->studentModel->getAllStudents($keyword, $perPage, $offset, $sortby, $order);
+        $listStart = $totalStudents === 0 ? 0 : $offset + 1;
+        $listEnd = $totalStudents === 0 ? 0 : $offset + count($students);
+
+        return [
+            'students' => $students,
+            'currentPage' => $currentPage,
+            'perPage' => $perPage,
+            'totalStudents' => $totalStudents,
+            'totalPages' => $totalPages,
+            'listStart' => $listStart,
+            'listEnd' => $listEnd,
+        ];
+    }
+
+    private function getKeywordFromQuery(): string
+    {
+        return trim((string) ($_GET['keyword'] ?? ''));
+    }
+
+    private function getPageFromQuery(): int
+    {
+        return $this->getPositivePage($_GET['page'] ?? 1);
+    }
+
+    private function getPositivePage($value): int
+    {
+        $page = (int) $value;
+
+        return $page > 0 ? $page : 1;
+    }
+
+    private function sanitizeSortColumn($value): string
+    {
+        $allowedSortCols = ['id', 'name', 'email', 'phone'];
+        $sortby = (string) $value;
+
+        return in_array($sortby, $allowedSortCols, true) ? $sortby : 'id';
+    }
+
+    private function sanitizeSortOrder($value): string
+    {
+        return strtolower((string) $value) === 'asc' ? 'asc' : 'desc';
+    }
+
+    private function buildListUrl(int $page = 1, string $keyword = '', string $sortby = 'id', string $order = 'desc'): string
+    {
+        $params = [];
+
+        if ($page > 1) {
+            $params['page'] = $page;
+        }
+
+        if ($keyword !== '') {
+            $params['keyword'] = $keyword;
+        }
+
+        if ($sortby !== 'id' || $order !== 'desc') {
+            $params['sortby'] = $sortby;
+            $params['order'] = $order;
+        }
+
+        return 'index.php' . (!empty($params) ? '?' . http_build_query($params) : '');
+    }
+
+    private function buildEditUrl(int $studentId, int $page = 1, string $keyword = '', string $sortby = 'id', string $order = 'desc'): string
+    {
+        $params = [
+            'action' => 'edit',
+            'id' => $studentId,
+        ];
+
+        if ($page > 1) {
+            $params['page'] = $page;
+        }
+
+        if ($keyword !== '') {
+            $params['keyword'] = $keyword;
+        }
+
+        if ($sortby !== 'id' || $order !== 'desc') {
+            $params['sortby'] = $sortby;
+            $params['order'] = $order;
+        }
+
+        return 'index.php?' . http_build_query($params);
+    }
+
     private function handleAvatarUpload($file)
     {
         if (!$file || !isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
@@ -221,11 +365,11 @@ class StudentController
         }
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
-            return ['success' => false, 'filename' => null, 'message' => 'Tải ảnh đại diện thất bại.'];
+            return ['success' => false, 'filename' => null, 'message' => 'Tai anh dai dien that bai.'];
         }
 
         if (($file['size'] ?? 0) > 2 * 1024 * 1024) {
-            return ['success' => false, 'filename' => null, 'message' => 'Ảnh đại diện không được vượt quá 2MB.'];
+            return ['success' => false, 'filename' => null, 'message' => 'Anh dai dien khong duoc vuot qua 2MB.'];
         }
 
         $tmpName = $file['tmp_name'] ?? '';
@@ -238,20 +382,20 @@ class StudentController
         ];
 
         if ($imageInfo === false || !isset($allowedTypes[$imageInfo[2]])) {
-            return ['success' => false, 'filename' => null, 'message' => 'Ảnh đại diện phải là file JPG, PNG, GIF hoặc WEBP.'];
+            return ['success' => false, 'filename' => null, 'message' => 'Anh dai dien phai la file JPG, PNG, GIF hoac WEBP.'];
         }
 
         $uploadDir = $this->getAvatarUploadDirectory();
 
         if (!is_dir($uploadDir) && !mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
-            return ['success' => false, 'filename' => null, 'message' => 'Không thể tạo thư mục lưu ảnh đại diện.'];
+            return ['success' => false, 'filename' => null, 'message' => 'Khong the tao thu muc luu anh dai dien.'];
         }
 
         $fileName = uniqid('avatar_', true) . '.' . $allowedTypes[$imageInfo[2]];
         $destination = $uploadDir . DIRECTORY_SEPARATOR . $fileName;
 
         if (!move_uploaded_file($tmpName, $destination)) {
-            return ['success' => false, 'filename' => null, 'message' => 'Không thể lưu file ảnh đại diện.'];
+            return ['success' => false, 'filename' => null, 'message' => 'Khong the luu file anh dai dien.'];
         }
 
         return ['success' => true, 'filename' => $fileName, 'message' => ''];
@@ -277,27 +421,5 @@ class StudentController
         }
 
         return dirname(__DIR__, 2) . '/public/uploads/avatars';
-    }
-
-    /**
-     * HÀM MỚI: Hiển thị trang chi tiết sinh viên
-     */
-    public function detail()
-    {
-        $id = $_GET['id'] ?? null;
-        if (!$id) {
-            FlashMessage::set('student_action', 'ID sinh viên không hợp lệ.', 'error');
-            header('Location: index.php');
-            exit();
-        }
-        // Tái sử dụng hàm getStudentById đã có
-        $student = $this->studentModel->getStudentById($id);
-        if (!$student) {
-            FlashMessage::set('student_action', 'Không tìm thấy sinh viên.', 'error');
-            header('Location: index.php');
-            exit();
-        }
-        // Nạp file view chi tiết và truyền dữ liệu sinh viên
-        require_once PROJECT_ROOT . '/views/detail.php';
     }
 }

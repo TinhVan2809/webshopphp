@@ -26,6 +26,38 @@ $editAvatarUrl = $avatarBaseUrl . '/' . rawurlencode($editAvatar);
 $editCourse = $editingStudent['course'] ?? '';
 $editClassName = $editingStudent['class_name'] ?? '';
 $editMajor = $editingStudent['major'] ?? '';
+$currentPage = (int) ($currentPage ?? 1);
+$totalPages = (int) ($totalPages ?? 1);
+$totalStudents = (int) ($totalStudents ?? 0);
+$listStart = (int) ($listStart ?? 0);
+$listEnd = (int) ($listEnd ?? 0);
+$keyword = (string) ($keyword ?? '');
+$sortby = (string) ($sortby ?? 'id');
+$order = strtolower((string) ($order ?? 'desc')) === 'asc' ? 'asc' : 'desc';
+$nextOrder = $order === 'asc' ? 'desc' : 'asc';
+
+$buildListUrl = static function (int $page, ?string $sortColumn = null, ?string $sortDirection = null) use ($keyword, $sortby, $order): string {
+    $params = [];
+    $sortColumn = $sortColumn ?? $sortby;
+    $sortDirection = $sortDirection ?? $order;
+
+    if ($page > 1) {
+        $params['page'] = $page;
+    }
+
+    if ($keyword !== '') {
+        $params['keyword'] = $keyword;
+    }
+
+    if ($sortColumn !== 'id' || $sortDirection !== 'desc') {
+        $params['sortby'] = $sortColumn;
+        $params['order'] = $sortDirection;
+    }
+
+    return 'index.php' . (!empty($params) ? '?' . http_build_query($params) : '');
+};
+
+$cancelUrl = $buildListUrl($currentPage);
 
 ?>
 <!DOCTYPE html>
@@ -47,7 +79,8 @@ $editMajor = $editingStudent['major'] ?? '';
         }
 
         .topbar,
-        .toolbar {
+        .toolbar,
+        .pagination-summary {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -75,7 +108,8 @@ $editMajor = $editingStudent['major'] ?? '';
 
         form button,
         .button-link,
-        .action-link {
+        .action-link,
+        .page-link {
             display: inline-block;
             padding: 10px 15px;
             border: none;
@@ -103,15 +137,11 @@ $editMajor = $editingStudent['major'] ?? '';
         }
 
         .delete {
-            background-color: red !important;
+            background-color: #dc3545 !important;
         }
 
         .detail {
-            background-color: green;
-            color: #fff;
-            padding: 8px;
-            border-radius: 5px;
-            text-decoration: none;
+            background-color: #198754;
         }
 
         .action-cell {
@@ -189,11 +219,60 @@ $editMajor = $editingStudent['major'] ?? '';
             font-weight: bold;
         }
 
+        .helper-text,
+        .pagination-summary {
+            color: #666;
+            font-size: 13px;
+        }
+
         .helper-text {
             margin-top: -4px;
             margin-bottom: 12px;
-            color: #666;
-            font-size: 13px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .page-link {
+            background-color: #6c757d;
+            padding: 8px 12px;
+        }
+
+        .page-link.active {
+            background-color: #0d6efd;
+            font-weight: bold;
+        }
+
+        /* views/sinhvien_list.php -> bên trong thẻ <style> */
+        th a {
+            text-decoration: none;
+            color: #333;
+            display: block;
+            position: relative;
+        }
+
+        th a .sort-arrow {
+            display: none;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        th a.sort-asc .sort-arrow::after {
+            content: " ▲";
+        }
+
+        th a.sort-desc .sort-arrow::after {
+            content: " ▼";
+        }
+
+        th a.active .sort-arrow {
+            display: inline-block;
         }
     </style>
 </head>
@@ -213,7 +292,7 @@ $editMajor = $editingStudent['major'] ?? '';
 
         <div class="toolbar" style="margin-bottom: 15px;">
             <h1 style="margin: 0;">
-                <?php if (!empty($keyword ?? null)): ?>
+                <?php if ($keyword !== ''): ?>
                     Kết quả tìm kiếm cho: '<?php echo htmlspecialchars($keyword); ?>'
                 <?php else: ?>
                     Danh sách sinh viên
@@ -223,12 +302,18 @@ $editMajor = $editingStudent['major'] ?? '';
         </div>
 
         <form action="index.php" method="GET">
-            <input type="text" name="keyword" placeholder="Tìm kiếm theo tên..." value="<?php echo htmlspecialchars($keyword ?? ''); ?>">
+            <input type="text" name="keyword" placeholder="Tìm kiếm theo tên..." value="<?php echo htmlspecialchars($keyword); ?>">
+            <input type="hidden" name="sortby" value="<?php echo htmlspecialchars($sortby); ?>">
+            <input type="hidden" name="order" value="<?php echo htmlspecialchars($order); ?>">
             <button type="submit">Tìm kiếm</button>
         </form>
 
         <form action="<?php echo htmlspecialchars($formAction); ?>" method="POST" enctype="multipart/form-data">
             <h3><?php echo htmlspecialchars($formTitle); ?></h3>
+            <input type="hidden" name="page" value="<?php echo $currentPage; ?>">
+            <input type="hidden" name="keyword" value="<?php echo htmlspecialchars($keyword); ?>">
+            <input type="hidden" name="sortby" value="<?php echo htmlspecialchars($sortby); ?>">
+            <input type="hidden" name="order" value="<?php echo htmlspecialchars($order); ?>">
 
             <?php if ($isEditing): ?>
                 <input type="hidden" name="id" value="<?php echo (int) $editingStudent['id']; ?>">
@@ -256,38 +341,116 @@ $editMajor = $editingStudent['major'] ?? '';
 
             <button type="submit"><?php echo htmlspecialchars($submitLabel); ?></button>
             <?php if ($isEditing): ?>
-                <a href="index.php" class="button-link cancel">Hủy sửa</a>
+                <a href="<?php echo htmlspecialchars($cancelUrl); ?>" class="button-link cancel">Hủy sửa</a>
             <?php endif; ?>
         </form>
 
-        <h2>Danh sách sinh viên</h2>
+        <div class="pagination-summary" style="margin-bottom: 10px;">
+            <h2 style="margin: 0;">Danh sách sinh viên</h2>
+            <span>
+                <?php if ($totalStudents > 0): ?>
+                    Hiển thị <?php echo $listStart; ?>-<?php echo $listEnd; ?> / <?php echo $totalStudents; ?> sinh viên
+                <?php else: ?>
+                    Chưa có sinh viên nào
+                <?php endif; ?>
+            </span>
+        </div>
+
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>
+                        <?php
+
+
+                        $currentColOrder = ($sortby === 'id') ?
+                            $nextOrder : 'asc';
+                        $activeClass = ($sortby === 'id') ? 'active sort-' . $order : '';
+
+                        ?>
+
+                        <a href="?keyword=<?php echo
+                                            urlencode($keyword ?? ''); ?>&page=<?php echo $currentPage;
+                                                                                ?>&sortby=id&order=<?php echo $currentColOrder; ?>"
+                            class="<?php echo $activeClass; ?>">
+                            ID <span class="sort-arrow"></span>
+                        </a>
+                    </th>
                     <th>Ảnh đại diện</th>
-                    <th>Họ và tên</th>
-                    <th>Email</th>
-                    <th>Số điện thoại</th>
+                    <th>
+                        <?php
+
+                        $currentColOrder = ($sortby === 'name') ?
+                            $nextOrder : 'asc';
+                        $activeClass = ($sortby === 'name') ? 'active sort-' . $order : '';
+                        ?>
+
+                        <a href="?keyword=<?php echo
+                                            urlencode($keyword ?? ''); ?>&page=<?php echo $currentPage;
+                                                                                ?>&sortby=name&order=<?php echo $currentColOrder; ?>"
+                            class="<?php echo $activeClass; ?>">
+                            Họ và Tên <span class="sort-arrow"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <?php
+                        $currentColOrder = ($sortby === 'email') ?
+                            $nextOrder : 'asc';
+                        $activeClass = ($sortby === 'email') ?
+                            'active sort-' . $order : '';
+                        ?>
+
+                        <a href="?keyword=<?php echo
+                                            urlencode($keyword ?? ''); ?>&page=<?php echo $currentPage;
+                                    ?>&sortby=email&order=<?php echo $currentColOrder; ?>"
+                            class="<?php echo $activeClass; ?>">
+                            Email <span class="sort-arrow"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <?php
+
+                        $currentColOrder = ($sortby === 'phone') ?
+                            $nextOrder : 'asc';
+                        $activeClass = ($sortby === 'phone') ?
+                            'active sort-' . $order : '';
+                        ?>
+
+                        <a href="?keyword=<?php echo
+                                            urlencode($keyword ?? ''); ?>&page=<?php echo $currentPage;
+                                    ?>&sortby=phone&order=<?php echo $currentColOrder; ?>"
+                            class="<?php echo $activeClass; ?>">
+                            Số điện thoại <span
+                                class="sort-arrow"></span>
+                        </a>
+                    </th>
                     <th>Thao tác</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody> 
                 <?php foreach ($students as $student): ?>
                     <?php
                     $avatarFile = $student['avatar'] ?? '';
                     $avatarAbsolutePath = __DIR__ . '/../public/uploads/avatars/' . $avatarFile;
                     $avatarUrl = $avatarBaseUrl . '/' . rawurlencode($avatarFile);
-                    $editUrl = 'index.php?action=edit&id=' . (int) $student['id'];
-                    $deleteUrl = 'index.php?action=delete&id=' . (int) $student['id'];
-                    $detailUrl = 'index.php?action=detail&id=' . (int) $student['id'];
+                    $urlParams = ['id' => (int) $student['id']];
 
-                    if (!empty($keyword)) {
-                        $encodedKeyword = urlencode($keyword);
-                        $editUrl .= '&keyword=' . $encodedKeyword;
-                        $deleteUrl .= '&keyword=' . $encodedKeyword;
-                        $detailUrl .= '&keyword=' . $encodedKeyword;
+                    if ($currentPage > 1) {
+                        $urlParams['page'] = $currentPage;
                     }
+
+                    if ($keyword !== '') {
+                        $urlParams['keyword'] = $keyword;
+                    }
+
+                    if ($sortby !== 'id' || $order !== 'desc') {
+                        $urlParams['sortby'] = $sortby;
+                        $urlParams['order'] = $order;
+                    }
+
+                    $editUrl = 'index.php?' . http_build_query(['action' => 'edit'] + $urlParams);
+                    $deleteUrl = 'index.php?' . http_build_query(['action' => 'delete'] + $urlParams);
+                    $detailUrl = 'index.php?' . http_build_query(['action' => 'detail'] + $urlParams);
                     ?>
                     <tr>
                         <td><?php echo $student['id']; ?></td>
@@ -315,9 +478,7 @@ $editMajor = $editingStudent['major'] ?? '';
                                 href="<?php echo htmlspecialchars($deleteUrl); ?>"
                                 class="action-link delete"
                                 onclick="return confirm('Bạn có chắc muốn xóa sinh viên này?');">Xóa</a>
-                            <a href="<?php echo htmlspecialchars($detailUrl); ?>" class="detail">
-                                Chi tiết
-                            </a>
+                            <a href="<?php echo htmlspecialchars($detailUrl); ?>" class="action-link detail">Chi tiết</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -328,6 +489,26 @@ $editMajor = $editingStudent['major'] ?? '';
                 <?php endif; ?>
             </tbody>
         </table>
+
+        <?php if ($totalPages > 1): ?>
+            <div class="pagination">
+                <?php if ($currentPage > 1): ?>
+                    <a href="<?php echo htmlspecialchars($buildListUrl($currentPage - 1)); ?>" class="page-link">Trước</a>
+                <?php endif; ?>
+
+                <?php for ($page = 1; $page <= $totalPages; $page++): ?>
+                    <a
+                        href="<?php echo htmlspecialchars($buildListUrl($page)); ?>"
+                        class="page-link<?php echo $page === $currentPage ? ' active' : ''; ?>">
+                        <?php echo $page; ?>
+                    </a>
+                <?php endfor; ?>
+
+                <?php if ($currentPage < $totalPages): ?>
+                    <a href="<?php echo htmlspecialchars($buildListUrl($currentPage + 1)); ?>" class="page-link">Sau</a>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
     </div>
 
     <script>

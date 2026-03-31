@@ -40,25 +40,59 @@ class StudentModel
         return $stmt->execute();
     }
 
-    public function getAllStudents($keyword = null)
+    public function getAllStudents($keyword = null, $limit = null, $offset = null, $sortby = 'id', $order = 'desc')
     {
+        $allowedSortCols = ['id', 'name', 'email', 'phone'];
+        $sortby = in_array($sortby, $allowedSortCols, true) ? $sortby : 'id';
+        $order = strtolower((string) $order) === 'asc' ? 'asc' : 'desc';
+
         $sql = 'SELECT * FROM students';
 
-        if ($keyword) {
+        if ($keyword !== null && $keyword !== '') {
             $sql .= ' WHERE name LIKE :keyword';
         }
 
-        $sql .= ' ORDER BY id DESC';
+        $sql .= " ORDER BY {$sortby} {$order}";
+
+        if ($limit !== null && $offset !== null) {
+            $sql .= ' LIMIT :limit OFFSET :offset';
+        }
+
         $stmt = $this->conn->prepare($sql);
 
-        if ($keyword) {
+        if ($keyword !== null && $keyword !== '') {
+            $searchKeyword = "%{$keyword}%";
+            $stmt->bindParam(':keyword', $searchKeyword);
+        }
+
+        if ($limit !== null && $offset !== null) {
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function countStudents($keyword = null)
+    {
+        $sql = 'SELECT COUNT(*) FROM students';
+
+        if ($keyword !== null && $keyword !== '') {
+            $sql .= ' WHERE name LIKE :keyword';
+        }
+
+        $stmt = $this->conn->prepare($sql);
+
+        if ($keyword !== null && $keyword !== '') {
             $searchKeyword = "%{$keyword}%";
             $stmt->bindParam(':keyword', $searchKeyword);
         }
 
         $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return (int) $stmt->fetchColumn();
     }
 
     public function getStudentById($id)
