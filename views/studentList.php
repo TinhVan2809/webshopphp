@@ -23,6 +23,10 @@ $editPhone = $editingStudent['phone'] ?? '';
 $editAvatar = $editingStudent['avatar'] ?? '';
 $editAvatarAbsolutePath = __DIR__ . '/../public/uploads/avatars/' . $editAvatar;
 $editAvatarUrl = $avatarBaseUrl . '/' . rawurlencode($editAvatar);
+$editCourse = $editingStudent['course'] ?? '';
+$editClassName = $editingStudent['class_name'] ?? '';
+$editMajor = $editingStudent['major'] ?? '';
+
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -96,6 +100,18 @@ $editAvatarUrl = $avatarBaseUrl . '/' . rawurlencode($editAvatar);
         .action-link {
             padding: 8px 12px;
             background-color: #007bff;
+        }
+
+        .delete {
+            background-color: red !important;
+        }
+
+        .detail {
+            background-color: green;
+            color: #fff;
+            padding: 8px;
+            border-radius: 5px;
+            text-decoration: none;
         }
 
         .action-cell {
@@ -197,13 +213,11 @@ $editAvatarUrl = $avatarBaseUrl . '/' . rawurlencode($editAvatar);
 
         <div class="toolbar" style="margin-bottom: 15px;">
             <h1 style="margin: 0;">
-                <?php
-                if (isset($keyword) && !empty($keyword)) {
-                    echo "Kết quả tìm kiếm cho: '" . htmlspecialchars($keyword) . "'";
-                } else {
-                    echo 'Danh sách sinh viên';
-                }
-                ?>
+                <?php if (!empty($keyword ?? null)): ?>
+                    Kết quả tìm kiếm cho: '<?php echo htmlspecialchars($keyword); ?>'
+                <?php else: ?>
+                    Danh sách sinh viên
+                <?php endif; ?>
             </h1>
             <a href="index.php?action=dashboard" class="button-link">Xem thống kê</a>
         </div>
@@ -236,6 +250,10 @@ $editAvatarUrl = $avatarBaseUrl . '/' . rawurlencode($editAvatar);
             <input type="file" name="avatar" accept=".jpg,.jpeg,.png,.gif,.webp,image/*">
             <div class="helper-text"><?php echo htmlspecialchars($helperText); ?></div>
 
+            <input type="text" name="course" placeholder="Khóa học" value="<?php echo htmlspecialchars($editCourse); ?>">
+            <input type="text" name="class_name" placeholder="Tên lớp" value="<?php echo htmlspecialchars($editClassName); ?>">
+            <input type="text" name="major" placeholder="Ngành học" value="<?php echo htmlspecialchars($editMajor); ?>">
+
             <button type="submit"><?php echo htmlspecialchars($submitLabel); ?></button>
             <?php if ($isEditing): ?>
                 <a href="index.php" class="button-link cancel">Hủy sửa</a>
@@ -261,9 +279,14 @@ $editAvatarUrl = $avatarBaseUrl . '/' . rawurlencode($editAvatar);
                     $avatarAbsolutePath = __DIR__ . '/../public/uploads/avatars/' . $avatarFile;
                     $avatarUrl = $avatarBaseUrl . '/' . rawurlencode($avatarFile);
                     $editUrl = 'index.php?action=edit&id=' . (int) $student['id'];
+                    $deleteUrl = 'index.php?action=delete&id=' . (int) $student['id'];
+                    $detailUrl = 'index.php?action=detail&id=' . (int) $student['id'];
 
                     if (!empty($keyword)) {
-                        $editUrl .= '&keyword=' . urlencode($keyword);
+                        $encodedKeyword = urlencode($keyword);
+                        $editUrl .= '&keyword=' . $encodedKeyword;
+                        $deleteUrl .= '&keyword=' . $encodedKeyword;
+                        $detailUrl .= '&keyword=' . $encodedKeyword;
                     }
                     ?>
                     <tr>
@@ -288,6 +311,13 @@ $editAvatarUrl = $avatarBaseUrl . '/' . rawurlencode($editAvatar);
                         <td><?php echo htmlspecialchars($student['phone']); ?></td>
                         <td class="action-cell">
                             <a href="<?php echo htmlspecialchars($editUrl); ?>" class="action-link">Sửa</a>
+                            <a
+                                href="<?php echo htmlspecialchars($deleteUrl); ?>"
+                                class="action-link delete"
+                                onclick="return confirm('Bạn có chắc muốn xóa sinh viên này?');">Xóa</a>
+                            <a href="<?php echo htmlspecialchars($detailUrl); ?>" class="detail">
+                                Chi tiết
+                            </a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

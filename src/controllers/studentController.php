@@ -29,6 +29,9 @@ class StudentController
             $name = $_POST['name'] ?? '';
             $email = $_POST['email'] ?? '';
             $phone = $_POST['phone'] ?? '';
+            $course = $_POST['course'] ?? '';
+            $class_name = $_POST['class_name'] ?? '';
+            $major = $_POST['major'] ?? '';
 
             if (!empty($name) && !empty($email) && !empty($phone)) {
                 $uploadResult = $this->handleAvatarUpload($_FILES['avatar'] ?? null);
@@ -43,7 +46,10 @@ class StudentController
                     $name,
                     $email,
                     $phone,
-                    $uploadResult['filename']
+                    $uploadResult['filename'],
+                    $course,
+                    $class_name,
+                    $major,
                 );
 
                 if ($isAdded) {
@@ -97,6 +103,10 @@ class StudentController
         $email = $_POST['email'] ?? '';
         $phone = $_POST['phone'] ?? '';
 
+        $course = $_POST['course'] ?? '';
+        $class_name = $_POST['class_name'] ?? '';
+        $major = $_POST['major'] ?? '';
+
         if ($studentId <= 0) {
             FlashMessage::set('student_action', 'Không tìm thấy sinh viên cần cập nhật.', 'error');
             header('Location: index.php');
@@ -137,7 +147,10 @@ class StudentController
             $name,
             $email,
             $phone,
-            $avatarFile
+            $avatarFile,
+            $course,
+            $class_name,
+            $major,
         );
 
         if ($isUpdated) {
@@ -156,6 +169,41 @@ class StudentController
 
         FlashMessage::set('student_action', 'Cập nhật sinh viên thất bại!', 'error');
         header('Location: index.php?action=edit&id=' . $studentId);
+        exit();
+    }
+
+    public function delete()
+    {
+        $studentId = (int) ($_GET['id'] ?? 0);
+        $keyword = $_GET['keyword'] ?? '';
+        $redirectUrl = 'index.php';
+
+        if ($keyword !== '') {
+            $redirectUrl .= '?keyword=' . urlencode($keyword);
+        }
+
+        if ($studentId <= 0) {
+            FlashMessage::set('student_action', 'KhÃ´ng tÃ¬m tháº¥y sinh viÃªn cáº§n xÃ³a.', 'error');
+            header('Location: ' . $redirectUrl);
+            exit();
+        }
+
+        $student = $this->studentModel->getStudentById($studentId);
+
+        if (!$student) {
+            FlashMessage::set('student_action', 'Sinh viÃªn khÃ´ng tá»“n táº¡i.', 'error');
+            header('Location: ' . $redirectUrl);
+            exit();
+        }
+
+        if ($this->studentModel->deleteStudent($studentId)) {
+            $this->deleteAvatarFile($student['avatar'] ?? null);
+            FlashMessage::set('student_action', 'XÃ³a sinh viÃªn thÃ nh cÃ´ng!', 'success');
+        } else {
+            FlashMessage::set('student_action', 'XÃ³a sinh viÃªn tháº¥t báº¡i!', 'error');
+        }
+
+        header('Location: ' . $redirectUrl);
         exit();
     }
 
@@ -211,7 +259,7 @@ class StudentController
 
     private function deleteAvatarFile($fileName)
     {
-        if (empty($fileName)) {
+        if (empty($fileName) || $fileName === 'default-avatar.png') {
             return;
         }
 
@@ -229,5 +277,27 @@ class StudentController
         }
 
         return dirname(__DIR__, 2) . '/public/uploads/avatars';
+    }
+
+    /**
+     * HÀM MỚI: Hiển thị trang chi tiết sinh viên
+     */
+    public function detail()
+    {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            FlashMessage::set('student_action', 'ID sinh viên không hợp lệ.', 'error');
+            header('Location: index.php');
+            exit();
+        }
+        // Tái sử dụng hàm getStudentById đã có
+        $student = $this->studentModel->getStudentById($id);
+        if (!$student) {
+            FlashMessage::set('student_action', 'Không tìm thấy sinh viên.', 'error');
+            header('Location: index.php');
+            exit();
+        }
+        // Nạp file view chi tiết và truyền dữ liệu sinh viên
+        require_once PROJECT_ROOT . '/views/detail.php';
     }
 }

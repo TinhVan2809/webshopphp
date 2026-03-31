@@ -32,7 +32,10 @@ CREATE TABLE `students` (
   `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
-  `avatar` varchar(255) DEFAULT NULL
+  `avatar` varchar(255) DEFAULT NULL,
+  `course` varchar(50) DEFAULT NULL,
+  `class_name` varchar(100) DEFAULT NULL,
+  `major` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

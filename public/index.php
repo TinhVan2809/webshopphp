@@ -1,60 +1,54 @@
 <?php
+
 session_start();
-// public/index.php
-// Nạp file autoload của Composer
+
 define('PROJECT_ROOT', dirname(__DIR__));
-// Nạp file autoload của Composer
+
+require_once PROJECT_ROOT . '/vendor/autoload.php';
+
+use Tinhl\Bai01QuanlySv\Controllers\PageController;
+use Tinhl\Bai01QuanlySv\Controllers\StudentController;
 use Tinhl\Bai01QuanlySv\Controllers\UserController;
 
-require_once PROJECT_ROOT . '../vendor/autoload.php';
-
-use Tinhl\Bai01QuanlySv\Controllers\StudentController;
-// Simple Router
 $action = $_GET['action'] ?? 'index';
-// Danh sách các action không yêu cầu đăng nhập
+
 $public_actions = [
     'login',
     'register',
     'do_login',
-    'do_register'
+    'do_register',
+    'contact',
+    'submit_contact',
 ];
 
-// Danh sách các action được bảo vệ (yêu cầu đăng nhập)
 $protected_actions = [
     'index',
     'edit',
     'update',
     'delete',
     'add',
-    'dashboard'
+    'dashboard',
+    'detail',
 ];
-if (
-    in_array($action, $protected_actions) &&
-    !isset($_SESSION['user_id'])
-) {
+
+if (in_array($action, $protected_actions, true) && !isset($_SESSION['user_id'])) {
     header('Location: index.php?action=login');
     exit();
 }
 
-if (
-    !in_array($action, $public_actions) &&
-    !isset($_SESSION['user_id'])
-) {
+if (!in_array($action, $public_actions, true) && !isset($_SESSION['user_id'])) {
     header('Location: index.php?action=login');
     exit();
 }
 
-if (in_array($action, [
-    'login',
-    'register',
-    'do_login',
-    'do_register',
-    'logout'
-])) {
+if (in_array($action, ['login', 'register', 'do_login', 'do_register', 'logout'], true)) {
     $controller = new UserController();
+} elseif (in_array($action, ['contact', 'submit_contact'], true)) {
+    $controller = new PageController();
 } else {
     $controller = new StudentController();
 }
+
 switch ($action) {
     case 'index':
         $controller->index();
@@ -64,6 +58,9 @@ switch ($action) {
         break;
     case 'update':
         $controller->update();
+        break;
+    case 'delete':
+        $controller->delete();
         break;
     case 'dashboard':
         $controller->dashboard();
@@ -85,6 +82,15 @@ switch ($action) {
         break;
     case 'logout':
         $controller->logout();
+        break;
+    case 'contact':
+        $controller->showContactForm();
+        break;
+    case 'submit_contact':
+        $controller->submitContact();
+        break;
+    case 'detail':
+        $controller->detail();
         break;
     default:
         $controller->index();

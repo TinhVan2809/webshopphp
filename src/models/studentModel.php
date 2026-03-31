@@ -12,23 +12,30 @@ class StudentModel
     public function __construct()
     {
         $this->conn = Database::getInstance()->getConnection();
-        $this->ensureAvatarColumnExists();
+        $this->ensureStudentColumnsExist();
     }
 
-    public function addStudent($name, $email, $phone, $avatar = null)
+    public function addStudent($name, $email, $phone, $avatar = null, $course = null, $class_name = null, $major = null)
     {
         $stmt = $this->conn->prepare(
-            'INSERT INTO students (name, email, phone, avatar) VALUES (:name, :email, :phone, :avatar)'
+            'INSERT INTO students (name, email, phone, avatar, course, class_name, major)
+             VALUES (:name, :email, :phone, :avatar, :course, :class_name, :major)'
         );
 
         $name = $this->sanitizeText($name);
         $email = $this->sanitizeText($email);
         $phone = $this->sanitizeText($phone);
+        $course = $this->sanitizeText($course);
+        $class_name = $this->sanitizeText($class_name);
+        $major = $this->sanitizeText($major);
 
-        $stmt->bindParam(':name', $name);
-        $stmt->bindParam(':email', $email);
-        $stmt->bindParam(':phone', $phone);
+        $stmt->bindValue(':name', $name);
+        $stmt->bindValue(':email', $email);
+        $stmt->bindValue(':phone', $phone);
         $stmt->bindValue(':avatar', $avatar);
+        $stmt->bindValue(':course', $course);
+        $stmt->bindValue(':class_name', $class_name);
+        $stmt->bindValue(':major', $major);
 
         return $stmt->execute();
     }
@@ -63,21 +70,43 @@ class StudentModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function updateStudent($id, $name, $email, $phone, $avatar = null)
+    public function updateStudent($id, $name, $email, $phone, $avatar = null, $course = null, $class_name = null, $major = null)
     {
         $stmt = $this->conn->prepare(
-            'UPDATE students SET name = :name, email = :email, phone = :phone, avatar = :avatar WHERE id = :id'
+            'UPDATE students
+             SET name = :name,
+                 email = :email,
+                 phone = :phone,
+                 avatar = :avatar,
+                 course = :course,
+                 class_name = :class_name,
+                 major = :major
+             WHERE id = :id'
         );
 
         $name = $this->sanitizeText($name);
         $email = $this->sanitizeText($email);
         $phone = $this->sanitizeText($phone);
+        $course = $this->sanitizeText($course);
+        $class_name = $this->sanitizeText($class_name);
+        $major = $this->sanitizeText($major);
 
         $stmt->bindValue(':id', (int) $id, PDO::PARAM_INT);
-        $stmt->bindParam(':name', $name);
-        $stmt->bindParam(':email', $email);
-        $stmt->bindParam(':phone', $phone);
+        $stmt->bindValue(':name', $name);
+        $stmt->bindValue(':email', $email);
+        $stmt->bindValue(':phone', $phone);
         $stmt->bindValue(':avatar', $avatar);
+        $stmt->bindValue(':course', $course);
+        $stmt->bindValue(':class_name', $class_name);
+        $stmt->bindValue(':major', $major);
+
+        return $stmt->execute();
+    }
+
+    public function deleteStudent($id)
+    {
+        $stmt = $this->conn->prepare('DELETE FROM students WHERE id = :id');
+        $stmt->bindValue(':id', (int) $id, PDO::PARAM_INT);
 
         return $stmt->execute();
     }
@@ -95,12 +124,33 @@ class StudentModel
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    private function ensureAvatarColumnExists()
+    private function ensureStudentColumnsExist()
     {
-        $stmt = $this->conn->query("SHOW COLUMNS FROM students LIKE 'avatar'");
+        $this->ensureColumnExists(
+            'avatar',
+            'ALTER TABLE students ADD COLUMN avatar VARCHAR(255) DEFAULT NULL AFTER phone'
+        );
+        $this->ensureColumnExists(
+            'course',
+            'ALTER TABLE students ADD COLUMN course VARCHAR(50) DEFAULT NULL AFTER avatar'
+        );
+        $this->ensureColumnExists(
+            'class_name',
+            'ALTER TABLE students ADD COLUMN class_name VARCHAR(100) DEFAULT NULL AFTER course'
+        );
+        $this->ensureColumnExists(
+            'major',
+            'ALTER TABLE students ADD COLUMN major VARCHAR(100) DEFAULT NULL AFTER class_name'
+        );
+    }
+
+    private function ensureColumnExists($columnName, $alterSql)
+    {
+        $quotedColumnName = $this->conn->quote($columnName);
+        $stmt = $this->conn->query("SHOW COLUMNS FROM students LIKE {$quotedColumnName}");
 
         if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
-            $this->conn->exec('ALTER TABLE students ADD COLUMN avatar VARCHAR(255) DEFAULT NULL AFTER phone');
+            $this->conn->exec($alterSql);
         }
     }
 
