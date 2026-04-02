@@ -105,6 +105,10 @@
                     name="password" required>
 
             </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
             <button type="submit">Đăng ký</button>
         </form>
         <div class="switch-form">

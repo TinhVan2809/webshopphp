@@ -11,5 +11,7 @@
             "name": "Tinh Van"
         }
     ],
-    "require": {}
+    "require": {
+        "phpmailer/phpmailer": "^7.0"
+    }
 }

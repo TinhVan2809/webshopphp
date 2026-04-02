@@ -1,3 +1,7 @@
+<?php
+
+use Tinhl\Bai01QuanlySv\Core\FlashMessage;
+?>
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -7,12 +11,10 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color:
-                #f4f4f4;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
-            align-items:
-                center;
+            align-items: center;
             height: 100vh;
             margin: 0;
         }
@@ -36,39 +38,50 @@
         .form-group label {
             display: block;
             margin-bottom: 5px;
-
         }
 
         .form-group input {
             width: 100%;
             padding: 8px;
-
             box-sizing: border-box;
         }
 
         button {
             width: 100%;
             padding: 10px;
-            background-color:
-                #007bff;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
-            cursor:
-                pointer;
+            cursor: pointer;
         }
 
         .error {
             color: red;
             text-align: center;
-            margin-bottom:
-
-                10px;
+            margin-bottom: 10px;
         }
 
         .switch-form {
             text-align: center;
             margin-top: 15px;
+        }
+
+        .flash-message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .flash-success {
+            background-color: #28a745;
+        }
+
+        .flash-error {
+            background-color: #dc3545;
         }
     </style>
 </head>
@@ -76,38 +89,32 @@
 <body>
     <div class="container">
         <h1>Đăng nhập</h1>
+        <?php FlashMessage::display(); ?>
+
         <?php if (isset($error)): ?>
-            <p class="error"><?php echo $error; ?></p>
+            <p class="error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></p>
         <?php endif; ?>
+
         <form action="index.php?action=do_login" method="POST">
             <div class="form-group">
                 <label for="username">Tên đăng nhập:</label>
-                <input type="text" id="username" name="username"
-
-                    required>
-
+                <input type="text" id="username" name="username" required>
             </div>
+
             <div class="form-group">
                 <label for="password">Mật khẩu:</label>
-
-                <input type="password" id="password"
-
-                    name="password" required>
-
+                <input type="password" id="password" name="password" required>
             </div>
+
             <button type="submit">Đăng nhập</button>
         </form>
+
         <div class="switch-form">
-            Chưa có tài khoản? <a
-
-                href="index.php?action=register">Đăng ký ngay!</a>
-
+            Chưa có tài khoản? <a href="index.php?action=register">Đăng ký ngay!</a>
         </div>
+
         <div class="switch-form">
-            <a href="index.php?action=contact">Liên hệ hỗ
-
-                trợ</a>
-
+            <a href="index.php?action=contact">Liên hệ hỗ trợ</a>
         </div>
     </div>
 </body>
