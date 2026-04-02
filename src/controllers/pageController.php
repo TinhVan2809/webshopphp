@@ -34,9 +34,7 @@ class PageController
                 || !filter_var($email, FILTER_VALIDATE_EMAIL)
             ) {
 
-                FlashMessage::set('contact_form', 'Vui lòng điền
-
-đầy đủ và đúng định dạng thông tin.', 'error');
+                FlashMessage::set('contact_form', 'Vui lòng điền đầy đủ và đúng định dạng thông tin.', 'error');
             } else {
                 if ($this->contactModel->saveContact(
                     $name,
