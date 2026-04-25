@@ -24,8 +24,7 @@ class Controller
         include_once PROJECT_ROOT . '/components/header.php';
 ?>
 
-        <main class="container mx-auto px-7 py-10">
-            <!-- <h1 class="text-3xl font-bold mb-8">Sản phẩm mới nhất</h1> -->
+        <main class="container mx-auto px-7 py-10 mt-30">
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <?php foreach ($products as $product): ?>
@@ -37,6 +36,9 @@ class Controller
                             <?php if ($product['is_new']): ?>
                                 <span class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">Mới</span>
                             <?php endif; ?>
+                            <div class="absolute top-0 right-0 p-3">
+                                <i class="ri-heart-3-line text-2xl"></i>
+                            </div>
                         </a>
 
                         <div class="p-4">
@@ -64,8 +66,8 @@ class Controller
         </main>
 
         <?php
-        // Bạn có thể thêm footer tại đây nếu có
-        echo "</body></html>";
+        // Footer
+        include_once PROJECT_ROOT . '/components/footer.php';
     }
 
     public function detail()
@@ -125,8 +127,183 @@ class Controller
                 </div>
             </main>
 <?php endif;
-        echo "</body></html>";
+       include_once PROJECT_ROOT . '/components/footer.php';
     }
+
+
+      public function getProfileByUser()
+    {
+        // 1. Kiểm tra xác thực: Nếu chưa đăng nhập thì không cho vào
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        $id = $_GET['id'] ?? null;
+
+        // 2. Kiểm tra phân quyền: Đảm bảo người dùng chỉ xem được hồ sơ của chính mình
+        if (!$id || (int)$id !== (int)$_SESSION['user_id']) {
+            header("Location: index.php?action=profile&id=" . $_SESSION['user_id']);
+            exit;
+        }
+
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $query = "SELECT * FROM users
+                  WHERE user_id = :id";
+
+        $stmt = $db->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        include_once PROJECT_ROOT . '/components/header.php';
+
+       if(!$user): ?>
+            <div class="container mx-auto py-20 text-center">
+                <p class="text-xl font-medium">Trang không tồn tại hoặc tài khoản đã bị khóa.</p>
+            </div>
+       <?php else: ?>
+            <main class="container mx-auto px-7 py-20 mt-10">
+                <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                    <h1 class="text-3xl font-bold mb-8 flex items-center gap-3">
+                        <i class="ri-user-settings-line"></i> Thông tin cá nhân
+                    </h1>
+                    
+                    <div class="space-y-5">
+                        <div class="flex flex-col items-center mb-6">
+                            <img src="/web-shop-php/asset/<?php echo $user['avatar'] ?: 'default_avatar.png'; ?>" 
+                                 class="w-32 h-32 rounded-full object-cover border-4 border-gray-100 shadow-sm">
+                        </div>
+                        <div class="flex border-b border-gray-50 pb-3">
+                            <span class="w-40 text-gray-500">Họ và tên:</span>
+                            <span class="font-semibold"><?php echo htmlspecialchars($user['name']); ?></span>
+                        </div>
+                        <div class="flex border-b border-gray-50 pb-3">
+                            <span class="w-40 text-gray-500">Tên đăng nhập:</span>
+                            <span><?php echo htmlspecialchars($user['username']); ?></span>
+                        </div>
+                        <div class="flex border-b border-gray-50 pb-3">
+                            <span class="w-40 text-gray-500">Email:</span>
+                            <span><?php echo htmlspecialchars($user['gmail'] ?? 'Chưa cập nhật'); ?></span>
+                        </div>
+                        <div class="flex">
+                            <span class="w-40 text-gray-500">Số điện thoại:</span>
+                            <span><?php echo htmlspecialchars($user['number_phone'] ?? 'Chưa cập nhật'); ?></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-12 flex gap-4">
+                        <a href="index.php?action=edit_profile&id=<?php echo $user['user_id']; ?>" class="bg-black text-white px-8 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all text-center">Chỉnh sửa</a>
+                        <a href="index.php?action=logout" class="border border-red-500 text-red-500 px-8 py-2.5 rounded-lg font-bold hover:bg-red-50 transition-all text-center">Đăng xuất</a>
+                    </div>
+                </div>
+            </main>
+       <?php endif;
+
+       include_once PROJECT_ROOT . '/components/footer.php';
+    }
+
+    public function editProfile()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: index.php?action=login");
+            exit;
+        }
+
+        $id = $_GET['id'] ?? null;
+        if (!$id || (int)$id !== (int)$_SESSION['user_id']) {
+            header("Location: index.php?action=profile&id=" . $_SESSION['user_id']);
+            exit;
+        }
+
+        $database = new Database();
+        $db = $database->getConnection();
+        $stmt = $db->prepare("SELECT * FROM users WHERE user_id = :id");
+        $stmt->execute(['id' => $id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        include_once PROJECT_ROOT . '/components/header.php';
+        ?>
+        <main class="container mx-auto px-7 py-20 mt-10">
+            <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <h1 class="text-3xl font-bold mb-8 italic">Chỉnh sửa thông tin</h1>
+                
+                <form action="index.php?action=update_profile" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
+                    
+                    <div class="flex flex-col items-center mb-4">
+                        <img src="/web-shop-php/asset/<?php echo $user['avatar'] ?: 'default_avatar.png'; ?>" class="w-24 h-24 rounded-full object-cover mb-4 border shadow-sm">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Thay đổi ảnh đại diện</label>
+                        <input type="file" name="avatar" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800 cursor-pointer">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
+                        <input type="text" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" 
+                               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black outline-none" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+                        <input type="text" name="number_phone" value="<?php echo htmlspecialchars($user['number_phone']); ?>" 
+                               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black outline-none">
+                    </div>
+
+                    <div class="pt-4 flex gap-4">
+                        <button type="submit" class="bg-black text-white px-8 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all">Lưu thay đổi</button>
+                        <a href="index.php?action=profile&id=<?php echo $user['user_id']; ?>" class="bg-gray-200 text-gray-800 px-8 py-2.5 rounded-lg font-bold hover:bg-gray-300 transition-all">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+        <?php
+        include_once PROJECT_ROOT . '/components/footer.php';
+    }
+
+    public function updateProfile()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $user_id = $_POST['user_id'] ?? null;
+            $name = $_POST['name'] ?? '';
+            $number_phone = $_POST['number_phone'] ?? '';
+
+            if (!$user_id || (int)$user_id !== (int)$_SESSION['user_id']) {
+                header("Location: index.php");
+                exit;
+            }
+
+            $database = new Database();
+            $db = $database->getConnection();
+
+            // Xử lý Avatar
+            $avatar_name = $_SESSION['user_avatar'] ?? 'default_avatar.png';
+            if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
+                $file_ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+                if (in_array($file_ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+                    $avatar_name = "avatar_" . $user_id . "_" . time() . "." . $file_ext;
+                    move_uploaded_file($_FILES['avatar']['tmp_name'], PROJECT_ROOT . '/asset/' . $avatar_name);
+                }
+            }
+
+            $query = "UPDATE users SET name = :name, number_phone = :phone, avatar = :avatar WHERE user_id = :id";
+            $stmt = $db->prepare($query);
+            $stmt->execute([
+                'name' => $name,
+                'phone' => $number_phone,
+                'avatar' => $avatar_name,
+                'id' => $user_id
+            ]);
+
+            $_SESSION['user_name'] = $name;
+            $_SESSION['user_avatar'] = $avatar_name;
+
+            header("Location: index.php?action=profile&id=" . $user_id);
+            exit;
+        }
+    }
+
 
     public function login()
     {
@@ -154,6 +331,7 @@ class Controller
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'];
+                $_SESSION['user_avatar'] = $user['avatar'] ?? 'default_avatar.png';
 
                 // Chuyển hướng dựa trên role
                 if ($user['role'] === 'admin' || $user['role'] === 'staff') {

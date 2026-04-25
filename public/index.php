@@ -38,6 +38,15 @@ switch ($action) {
     case 'logout':
         $controller->logout();
         break;
+    case 'profile':
+        $controller->getProfileByUser();
+        break;
+    case 'edit_profile':
+        $controller->editProfile();
+        break;
+    case 'update_profile':
+        $controller->updateProfile();
+        break;
     
     // --- ADMIN ROUTES ---
     
