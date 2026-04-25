@@ -3,7 +3,7 @@
         'name' => 'tinhl/bai01_quanly_sv',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '5d3d4017cc3b216d636ea4b46bb410d9bb43468d',
+        'reference' => 'b189c1f302250af08789325bfde9bf93b051a1dd',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'tinhl/bai01_quanly_sv' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '5d3d4017cc3b216d636ea4b46bb410d9bb43468d',
+            'reference' => 'b189c1f302250af08789325bfde9bf93b051a1dd',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
