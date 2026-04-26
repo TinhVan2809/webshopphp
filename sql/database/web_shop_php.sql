@@ -31,6 +31,7 @@ CREATE TABLE `carts` (
   `cart_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
+  `quantity` int(11) DEFAULT 1,
   `add_at` timestamp NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -38,8 +39,8 @@ CREATE TABLE `carts` (
 -- Đang đổ dữ liệu cho bảng `carts`
 --
 
-INSERT INTO `carts` (`cart_id`, `user_id`, `product_id`, `add_at`) VALUES
-(1, 3, 2, '2026-04-22 18:00:41');
+INSERT INTO `carts` (`cart_id`, `user_id`, `product_id`, `quantity`, `add_at`) VALUES
+(1, 3, 2, 1, '2026-04-22 18:00:41');
 
 -- --------------------------------------------------------
 
