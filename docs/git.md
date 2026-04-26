@@ -1,6 +1,6 @@
 - Dùng **git checkout -b [tên nhánh]** để tạo nhánh mới khi làm một chức năng hãy chỉnh sửa nào đó 
-- Quan trọng: Sau khi push vào nhánh (nhánh vừa tạo) -> lên github tạo pull request xong đợi kiểm duyệt rồi mới megre vào main nhằm tránh bị conflig
-- Sau khi megre thành công dùng 2 câu lệnh:
+- Quan trọng: Sau khi push vào nhánh (nhánh vừa tạo) -> lên github tạo pull request xong đợi kiểm duyệt rồi mới merge vào main nhằm tránh bị conflict
+- Sau khi merge thành công dùng 2 câu lệnh:
 ```bash
 git branch -d feature/login        # Xóa local
 git push origin --delete feature/login # Xóa remote
