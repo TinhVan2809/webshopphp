@@ -368,6 +368,9 @@ class Controller
 
     public function login()
     {
+        if (isset($_GET['redirect'])) {
+            $_SESSION['redirect'] = $_GET['redirect'];
+        }
         include_once PROJECT_ROOT . '/views/login.php';
     }
 
@@ -398,6 +401,13 @@ class Controller
                 $cartCtrl->syncSessionCartToDb($user['user_id']);
 
                 // Chuyển hướng dựa trên role
+                if (isset($_SESSION['redirect'])) {
+                    $redirect = $_SESSION['redirect'];
+                    unset($_SESSION['redirect']);
+                    header("Location: index.php?action=" . $redirect);
+                    exit;
+                }
+
                 if ($user['role'] === 'admin' || $user['role'] === 'staff') {
                     header("Location: index.php?action=admin_dashboard");
                 } else {

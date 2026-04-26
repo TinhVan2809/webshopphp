@@ -79,9 +79,15 @@
                         <span class="font-bold text-lg">Tổng cộng</span>
                         <span class="font-bold text-3xl text-red-600" id="summary-total"><?php echo number_format($total, 0, ',', '.'); ?>₫</span>
                     </div>
-                    <button class="w-full bg-black text-white py-4 rounded-full font-bold hover:bg-gray-800 transition-colors text-lg shadow-lg">
-                        Tiến hành thanh toán
-                    </button>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <a href="index.php?action=checkout" class="w-full bg-black text-white py-4 rounded-full font-bold hover:bg-gray-800 transition-colors text-lg shadow-lg flex justify-center items-center gap-2">
+                            Tiến hành thanh toán <i class="ri-arrow-right-line"></i>
+                        </a>
+                    <?php else: ?>
+                        <a href="index.php?action=login&redirect=checkout" class="w-full bg-black text-white py-4 rounded-full font-bold hover:bg-gray-800 transition-colors text-lg shadow-lg flex justify-center items-center gap-2 text-center">
+                            Đăng nhập để thanh toán <i class="ri-arrow-right-line"></i>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

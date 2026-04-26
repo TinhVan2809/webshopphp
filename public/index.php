@@ -13,7 +13,8 @@ require_once PROJECT_ROOT . '/app/Admin/UserController.php';
 require_once PROJECT_ROOT . '/app/Admin/ProductController.php';
 require_once PROJECT_ROOT . '/app/Admin/OrderController.php';
 require_once PROJECT_ROOT . '/app/CartController.php';
-
+require_once PROJECT_ROOT . '/app/CheckoutController.php';
+require_once PROJECT_ROOT . '/app/PaymentController.php';
 $action = $_GET['action'] ?? 'index';
 $controller = new Controller();
 
@@ -23,7 +24,8 @@ $userCtrl = new UserController();
 $productCtrl = new ProductController();
 $orderCtrl = new OrderController();
 $cartCtrl = new CartController();
-
+$checkoutCtrl = new CheckoutController();
+$paymentCtrl = new PaymentController();
 switch ($action) {
     case 'index':
         $controller->index();
@@ -42,6 +44,30 @@ switch ($action) {
         break;
     case 'remove_from_cart':
         $cartCtrl->remove();
+        break;
+
+    // --- Checkout & Payment Routes ---
+    case 'checkout':
+        $checkoutCtrl->index();
+        break;
+    case 'process_checkout':
+        $checkoutCtrl->process();
+        break;
+    case 'checkout_success':
+        include_once PROJECT_ROOT . '/components/header.php';
+        include_once PROJECT_ROOT . '/views/checkout_success.php';
+        include_once PROJECT_ROOT . '/components/footer.php';
+        break;
+    case 'checkout_failed':
+        include_once PROJECT_ROOT . '/components/header.php';
+        include_once PROJECT_ROOT . '/views/checkout_failed.php';
+        include_once PROJECT_ROOT . '/components/footer.php';
+        break;
+    case 'vnpay_return':
+        $paymentCtrl->vnpayReturn();
+        break;
+    case 'paypal_return':
+        $paymentCtrl->paypalReturn();
         break;
     case 'login':
         $controller->login();
