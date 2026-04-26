@@ -91,7 +91,7 @@
             </form>
 
             <div class="mt-12 text-center">
-                <p class="text-gray-500">Chưa có tài khoản? <a href="#" class="font-bold text-black hover:underline decoration-2 underline-offset-4">Đăng ký miễn phí</a></p>
+                <p class="text-gray-500">Chưa có tài khoản? <a href="index.php?action=register" class="font-bold text-black hover:underline decoration-2 underline-offset-4">Đăng ký miễn phí</a></p>
             </div>
         </div>
     </div>

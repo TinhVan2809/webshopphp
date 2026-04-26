@@ -32,6 +32,12 @@ switch ($action) {
     case 'login':
         $controller->login();
         break;
+    case 'register':
+        $controller->register();
+        break;
+    case 'handleRegister':
+        $controller->handleRegister();
+        break;
     case 'handleLogin':
         $controller->handleLogin();
         break;

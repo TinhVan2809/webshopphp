@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th4 25, 2026 lúc 04:41 PM
+-- Thời gian đã tạo: Th4 26, 2026 lúc 09:23 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -362,14 +362,11 @@ CREATE TABLE `users` (
 -- Đang đổ dữ liệu cho bảng `users`
 --
 
-INSERT INTO `users` (`user_id`, `name`, `username`, `password`, `role`, `status`, `gender`, `number_phone`, `gmail`, `create_at`) VALUES
-(3, 'tinhvan', '1', '1', 'admin', 'active', '1', 818177533, 'tinhlu703@gmail.com', '2026-04-19 20:06:15'),
-(4, 'T├¡nh V─ân', 'tinhlu703@gmail.com', '$2b$10$Q.o5HJ4sMfrW5Qt1rQnSVuBdyoc8OjQxbEhWm91qIVV2tGlN3fODu', 'customer', 'active', '1', 0, '', '2026-04-24 07:40:36'),
-(6, 'Nguyß╗àn Admin', 'admin', '123456', 'admin', 'active', NULL, NULL, 'admin@haseki.com', '2026-04-25 12:54:35'),
-(7, 'Trß║ºn Nh├ón Vi├¬n', 'staff', '123456', 'staff', 'active', NULL, NULL, 'staff@haseki.com', '2026-04-25 12:54:35'),
-(8, 'L├¬ Kh├ích H├áng', 'customer', '123456', 'customer', 'active', NULL, NULL, 'customer@gmail.com', '2026-04-25 12:54:35'),
-(9, 'Phß║ím V─ân B', 'vanb', '123456', 'customer', 'active', NULL, NULL, 'vanb@gmail.com', '2026-04-25 12:54:35'),
-(10, 'Ho├áng Thß╗ï C', 'thic', '123456', 'customer', 'active', NULL, NULL, 'thic@gmail.com', '2026-04-25 12:54:35');
+INSERT INTO `users` (`user_id`, `name`, `username`, `password`, `role`, `status`, `gender`, `number_phone`, `gmail`, `avatar`, `create_at`) VALUES
+(3, 'tinhvan', '1', '1', 'admin', 'active', '1', 818177533, 'tinhlu703@gmail.com', 'default_avatar.png', '2026-04-19 20:06:15'),
+(4, 'T├¡nh V─ân', 'tinhlu703@gmail.com', '$2b$10$Q.o5HJ4sMfrW5Qt1rQnSVuBdyoc8OjQxbEhWm91qIVV2tGlN3fODu', 'customer', 'active', '1', 0, '', 'default_avatar.png', '2026-04-24 07:40:36'),
+(12, 'Tính Văn ', 'username12345', '$2y$10$YNZIEDYKYFeWhAN2InDlnOZVASzo.3I2XnGeHz4u7ia6wfTs0kxta', 'customer', 'active', '1', 0, '', 'default_avatar.png', '2026-04-26 07:19:52'),
+(13, 'Admin', 'admin', '$2y$10$uIlQiJFyJsCFbEanXxDeEeX7geY9vISXiyZ5xRpbF.uLBJadg9OEy', 'admin', 'active', '1', 0, '', 'default_avatar.png', '2026-04-26 07:20:32');
 
 -- --------------------------------------------------------
 
@@ -664,7 +661,7 @@ ALTER TABLE `reviews`
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT cho bảng `user_address`

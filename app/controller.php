@@ -304,6 +304,62 @@ class Controller
         }
     }
 
+    public function register()
+    {
+        include_once PROJECT_ROOT . '/views/register.php';
+    }
+
+    public function handleRegister()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $name = $_POST['name'] ?? '';
+            $username = $_POST['username'] ?? '';
+            $password = $_POST['password'] ?? '';
+            $gender = $_POST['gender'] ?? '0';
+            $number_phone = $_POST['number_phone'] ?? '';
+            $gmail = $_POST['gmail'] ?? '';
+
+            $database = new Database();
+            $db = $database->getConnection();
+
+            // Kiểm tra username đã tồn tại chưa
+            $checkQuery = "SELECT user_id FROM users WHERE username = :username";
+            $checkStmt = $db->prepare($checkQuery);
+            $checkStmt->execute(['username' => $username]);
+
+            if ($checkStmt->rowCount() > 0) {
+                $error = "Tên đăng nhập đã tồn tại!";
+                include_once PROJECT_ROOT . '/views/register.php';
+                return;
+            }
+
+            // Hash the password before saving
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+            try {
+                $query = "INSERT INTO users (name, username, password, gender, number_phone, gmail, role, status) 
+                          VALUES (:name, :username, :password, :gender, :phone, :gmail, 'customer', 'active')";
+                
+                $stmt = $db->prepare($query);
+                $result = $stmt->execute([
+                    'name' => $name,
+                    'username' => $username,
+                    'password' => $hashedPassword,
+                    'gender' => $gender,
+                    'phone' => $number_phone,
+                    'gmail' => $gmail
+                ]);
+
+                if ($result) {
+                    header("Location: index.php?action=login&register_success=1");
+                    exit;
+                }
+            } catch (PDOException $e) {
+                $error = "Có lỗi xảy ra: " . $e->getMessage();
+                include_once PROJECT_ROOT . '/views/register.php';
+            }
+        }
+    }
 
     public function login()
     {
@@ -325,9 +381,8 @@ class Controller
             $stmt->execute();
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Ghi chú: Trong thực tế nên dùng password_hash và password_verify
-            // Ở đây tôi giả định password lưu trong DB đang ở dạng text thuần hoặc khớp trực tiếp
-            if ($user && $password === $user['password']) {
+            // Verify the hashed password
+            if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'];

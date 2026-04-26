@@ -3,6 +3,18 @@
 http://localhost/webshopphp/public/index.php
 ```
 
+###  Tài khoản Admin
+```bash
+    admin
+    1
+```
+
+### Tài khoản khách hàng
+```bash
+    customer12345
+    12345678
+```
+
 ### Các lỗi thường gặp
 **Page not found**
 => Kiểm tra lại URL (Mặc định: http://localhost/webshopphp/public/index.php)
