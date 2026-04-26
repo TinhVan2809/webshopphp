@@ -38,24 +38,34 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 md:gap-6">
+            <?php
+                require_once PROJECT_ROOT . '/app/CartController.php';
+                $cartCount = (new CartController())->getCartCount();
+            ?>
+            <div class="flex gap-3 items-center">
+                <a href="index.php?action=cart" class="relative">
+                    <i class="ri-shopping-cart-2-line text-2xl cursor-pointer hover:text-blue-600 transition-colors"></i>
+                    <span id="cart-count-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center" style="display: <?php echo $cartCount > 0 ? 'flex' : 'none'; ?>">
+                        <?php echo $cartCount; ?>
+                    </span>
+                </a>
+                <i class="ri-heart-add-2-line text-2xl cursor-pointer hover:text-red-500 transition-colors hidden md:block"></i>
+            </div>
+
             <?php if (isset($_SESSION['user_id'])): ?>
                 <div class="flex items-center gap-2 md:gap-3">
                     <?php if ($_SESSION['user_role'] === 'admin' || $_SESSION['user_role'] === 'staff'): ?>
-                        <a href="index.php?action=admin_dashboard" class="text-xs bg-blue-500 text-white px-2 py-1 rounded">Admin</a>
+                        <a href="index.php?action=admin_dashboard" class="hidden md:inline-block text-xs bg-blue-500 text-white px-2 py-1 rounded">Admin</a>
                     <?php endif; ?>
-                    <!-- <a href="index.php?action=logout" class="text-gray-500 hover:text-red-600 transition-colors"><i class="ri-logout-box-r-line text-xl"></i></a> -->
-                     <div class="flex gap-3">
-                        <i class="ri-shopping-cart-2-line text-2xl cursor-pointer"></i>
-                        <i class="ri-heart-add-2-line text-2xl cursor-pointer"></i>
-                        <a href="index.php?action=profile&id=<?php echo $_SESSION['user_id']; ?>" class="flex items-center">
-                            <?php if (isset($_SESSION['user_avatar']) && $_SESSION['user_avatar'] !== 'default_avatar.png'): ?>
-                                <img src="/web-shop-php/asset/<?php echo $_SESSION['user_avatar']; ?>" class="w-8 h-8 rounded-full object-cover">
-                            <?php else: ?>
-                                <i class="ri-user-3-line text-2xl cursor-pointer"></i>
-                            <?php endif; ?>
-                        </a>
-                     </div> 
+                    
+                    <a href="index.php?action=profile&id=<?php echo $_SESSION['user_id']; ?>" class="flex items-center">
+                        <?php if (isset($_SESSION['user_avatar']) && $_SESSION['user_avatar'] !== 'default_avatar.png'): ?>
+                            <img src="/web-shop-php/asset/<?php echo $_SESSION['user_avatar']; ?>" class="w-8 h-8 rounded-full object-cover border border-gray-200">
+                        <?php else: ?>
+                            <i class="ri-user-3-line text-2xl cursor-pointer hover:text-blue-600 transition-colors"></i>
+                        <?php endif; ?>
+                    </a>
                 </div>
             <?php else: ?>
                 <a href="index.php?action=login" class="bg-black text-white px-4 py-2 md:px-6 md:py-2 rounded-full text-sm md:font-bold hover:bg-gray-800 transition-all">Đăng nhập</a>

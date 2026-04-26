@@ -12,6 +12,7 @@ require_once PROJECT_ROOT . '/app/Admin/DashboardController.php';
 require_once PROJECT_ROOT . '/app/Admin/UserController.php';
 require_once PROJECT_ROOT . '/app/Admin/ProductController.php';
 require_once PROJECT_ROOT . '/app/Admin/OrderController.php';
+require_once PROJECT_ROOT . '/app/CartController.php';
 
 $action = $_GET['action'] ?? 'index';
 $controller = new Controller();
@@ -21,6 +22,7 @@ $dashboardCtrl = new DashboardController();
 $userCtrl = new UserController();
 $productCtrl = new ProductController();
 $orderCtrl = new OrderController();
+$cartCtrl = new CartController();
 
 switch ($action) {
     case 'index':
@@ -28,6 +30,18 @@ switch ($action) {
         break;
     case 'detail':
         $controller->detail();
+        break;
+    case 'cart':
+        $cartCtrl->index();
+        break;
+    case 'add_to_cart':
+        $cartCtrl->add();
+        break;
+    case 'update_cart':
+        $cartCtrl->update();
+        break;
+    case 'remove_from_cart':
+        $cartCtrl->remove();
         break;
     case 'login':
         $controller->login();

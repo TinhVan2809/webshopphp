@@ -16,3 +16,74 @@
         <a href="#" class="text-sm hover:underline">View All Stockist</a>
     </div>
 </footer>
+
+<!-- Toast Notification -->
+<div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `px-6 py-3 rounded-lg text-white shadow-lg transform transition-all duration-300 translate-y-10 opacity-0 flex items-center gap-2 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        
+        const icon = type === 'success' ? '<i class="ri-check-line text-xl"></i>' : '<i class="ri-error-warning-line text-xl"></i>';
+        toast.innerHTML = `${icon} <span>${message}</span>`;
+        
+        document.getElementById('toast-container').appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+            toast.classList.remove('translate-y-10', 'opacity-0');
+        }, 10);
+        
+        // Remove after 3s
+        setTimeout(() => {
+            toast.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    document.querySelectorAll('.btn-add-to-cart').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            let productId = this.getAttribute('data-id');
+            // Check if there is a quantity input for details page
+            let quantityInput = document.getElementById('product-quantity');
+            let quantity = quantityInput ? quantityInput.value : 1;
+
+            fetch('index.php?action=add_to_cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `product_id=${productId}&quantity=${quantity}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // Update cart count badge
+                    let cartBadge = document.getElementById('cart-count-badge');
+                    if(cartBadge && data.cartCount !== undefined) {
+                        cartBadge.textContent = data.cartCount;
+                        cartBadge.style.display = data.cartCount > 0 ? 'flex' : 'none';
+                        
+                        // Small animation on badge
+                        cartBadge.classList.add('scale-150', 'transition-transform');
+                        setTimeout(() => cartBadge.classList.remove('scale-150'), 200);
+                    }
+                } else {
+                    showToast('Có lỗi xảy ra, vui lòng thử lại!', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Không thể kết nối đến máy chủ!', 'error');
+            });
+        });
+    });
+});
+</script>

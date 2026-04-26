@@ -55,8 +55,8 @@ class Controller
                                         <p class="text-gray-400 text-xs line-through"><?php echo number_format($product['price'], 0, ',', '.'); ?>₫</p>
                                     <?php endif; ?>
                                 </div>
-                                <button class="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition-colors">
-                                    <i class="ri-shopping-cart-line"></i>
+                                <button class="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition-colors btn-add-to-cart" data-id="<?php echo $product['product_id']; ?>">
+                                    <i class="ri-shopping-cart-line pointer-events-none"></i>
                                 </button>
                             </div>
                         </div>
@@ -117,11 +117,16 @@ class Controller
                         <div class="prose max-w-none text-gray-700 mb-8 leading-relaxed">
                             <?php echo nl2br($product['description'] ?: $product['short_description']); ?>
                         </div>
-                        <div class="">
-                            <button class="bg-black text-white px-10 py-4 rounded-full font-bold hover:bg-gray-800 transition-all">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="flex items-center border border-gray-300 rounded-full px-4 py-2 w-32">
+                                <button type="button" class="text-xl px-2 hover:text-red-500" onclick="document.getElementById('product-quantity').stepDown()">-</button>
+                                <input type="number" id="product-quantity" value="1" min="1" class="w-full text-center outline-none bg-transparent font-medium">
+                                <button type="button" class="text-xl px-2 hover:text-green-500" onclick="document.getElementById('product-quantity').stepUp()">+</button>
+                            </div>
+                            <button class="bg-black text-white px-10 py-4 rounded-full font-bold hover:bg-gray-800 transition-all btn-add-to-cart flex-1" data-id="<?php echo $product['product_id']; ?>">
                                 THÊM VÀO GIỎ HÀNG
                             </button>
-                            <button class="py-3 px-3.5 border border-gray-200"><i class="ri-heart-line text-2xl"></i></button>
+                            <button class="py-3 px-3.5 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"><i class="ri-heart-line text-2xl"></i></button>
                         </div>
                     </div>
                 </div>
@@ -387,6 +392,10 @@ class Controller
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'];
                 $_SESSION['user_avatar'] = $user['avatar'] ?? 'default_avatar.png';
+
+                require_once PROJECT_ROOT . '/app/CartController.php';
+                $cartCtrl = new CartController();
+                $cartCtrl->syncSessionCartToDb($user['user_id']);
 
                 // Chuyển hướng dựa trên role
                 if ($user['role'] === 'admin' || $user['role'] === 'staff') {
