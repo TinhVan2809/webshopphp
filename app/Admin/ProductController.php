@@ -22,10 +22,16 @@ class ProductController extends AdminBaseController
     {
         $id = $_GET['id'] ?? null;
         $product = null;
+        $extra_images = [];
         if ($id) {
             $stmt = $this->db->prepare("SELECT * FROM products WHERE product_id = ?");
             $stmt->execute([$id]);
             $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Lấy danh sách ảnh phụ hiện có
+            $stmt = $this->db->prepare("SELECT * FROM product_images WHERE product_id = ?");
+            $stmt->execute([$id]);
+            $extra_images = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         $categories = $this->db->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
@@ -34,7 +40,8 @@ class ProductController extends AdminBaseController
         $this->render('products/form', [
             'product' => $product,
             'categories' => $categories,
-            'manufacturers' => $manufacturers
+            'manufacturers' => $manufacturers,
+            'extra_images' => $extra_images
         ]);
     }
 
@@ -66,9 +73,61 @@ class ProductController extends AdminBaseController
                 $query = "INSERT INTO products (name, price, discount_price, category_id, manufacturer_id, sku, status, description, thumbnail) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $this->db->prepare($query);
                 $stmt->execute([$name, $price, $discount_price, $category_id, $manufacturer_id, $sku, $status, $description, $thumbnail]);
+                $id = $this->db->lastInsertId();
+            }
+        }
+        // Kiểm tra xem người dùng có chọn ảnh phụ không
+        if (isset($_FILES['extra_images']) && !empty($_FILES['extra_images']['name'][0])) {
+            $extra_files = $_FILES['extra_images'];
+            $upload_dir = PROJECT_ROOT . '/asset/';
+
+            // Duyệt qua từng file được upload
+            for ($i = 0; $i < count($extra_files['name']); $i++) {
+                if ($extra_files['error'][$i] === UPLOAD_ERR_OK) {
+                    $file_name = $extra_files['name'][$i];
+                    $tmp_name = $extra_files['tmp_name'][$i];
+
+                    // Tạo tên file duy nhất để tránh trùng lặp
+                    $extension = pathinfo($file_name, PATHINFO_EXTENSION);
+                    $unique_name = "product_" . $id . "_gallery_" . uniqid() . "." . $extension;
+
+                    // Di chuyển file vào thư mục asset
+                    if (move_uploaded_file($tmp_name, $upload_dir . $unique_name)) {
+                        // Lưu đường dẫn ảnh vào bảng product_images
+                        $imgQuery = "INSERT INTO product_images (product_id, image) VALUES (:product_id, :image)";
+                        $imgStmt = $this->db->prepare($imgQuery);
+                        $imgStmt->execute([
+                            'product_id' => $id,
+                            'image' => $unique_name
+                        ]);
+                    }
+                }
             }
         }
         header("Location: index.php?action=admin_products");
+        exit;
+    }
+
+    public function deleteImage()
+    {
+        $image_id = $_GET['id'] ?? null;
+        $product_id = $_GET['product_id'] ?? null;
+        
+        if ($image_id) {
+            // Lấy thông tin ảnh để xóa file vật lý
+            $stmt = $this->db->prepare("SELECT image FROM product_images WHERE image_id = ?");
+            $stmt->execute([$image_id]);
+            $img = $stmt->fetchColumn();
+
+            if ($img && file_exists(PROJECT_ROOT . '/asset/' . $img)) {
+                unlink(PROJECT_ROOT . '/asset/' . $img);
+            }
+
+            // Xóa bản ghi trong database
+            $stmt = $this->db->prepare("DELETE FROM product_images WHERE image_id = ?");
+            $stmt->execute([$image_id]);
+        }
+        header("Location: index.php?action=product_form&id=" . $product_id);
         exit;
     }
 
@@ -76,8 +135,37 @@ class ProductController extends AdminBaseController
     {
         $id = $_GET['id'] ?? null;
         if ($id) {
-            $stmt = $this->db->prepare("DELETE FROM products WHERE product_id = ?");
-            $stmt->execute([$id]);
+            try {
+                // 1. Lấy tên file ảnh (thumbnail và ảnh phụ) để xóa file vật lý sau này
+                $stmt = $this->db->prepare("SELECT thumbnail FROM products WHERE product_id = ?");
+                $stmt->execute([$id]);
+                $thumb = $stmt->fetchColumn();
+
+                $stmt = $this->db->prepare("SELECT image FROM product_images WHERE product_id = ?");
+                $stmt->execute([$id]);
+                $extra_imgs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // 2. Xóa các ràng buộc ở các bảng phụ (Ảnh phụ, Yêu thích, Giỏ hàng, Kho)
+                // Việc này giúp tránh lỗi "Foreign key constraint fails"
+                $this->db->prepare("DELETE FROM product_images WHERE product_id = ?")->execute([$id]);
+                $this->db->prepare("DELETE FROM favority WHERE product_id = ?")->execute([$id]);
+                $this->db->prepare("DELETE FROM carts WHERE product_id = ?")->execute([$id]);
+                $this->db->prepare("DELETE FROM inventory WHERE product_id = ?")->execute([$id]);
+
+                // 3. Xóa sản phẩm chính trong bảng products
+                $stmt = $this->db->prepare("DELETE FROM products WHERE product_id = ?");
+                $stmt->execute([$id]);
+
+                // 4. Dọn dẹp file ảnh trong thư mục asset
+                if ($thumb && file_exists(PROJECT_ROOT . '/asset/' . $thumb)) unlink(PROJECT_ROOT . '/asset/' . $thumb);
+                foreach ($extra_imgs as $img) {
+                    $path = PROJECT_ROOT . '/asset/' . $img['image'];
+                    if (file_exists($path)) unlink($path);
+                }
+            } catch (PDOException $e) {
+                // Nếu vẫn lỗi (thường do bảng order_items - không nên xóa sản phẩm đã có người mua)
+                die("Không thể xóa sản phẩm: Sản phẩm này đã có trong đơn hàng của khách khách. Bạn nên chuyển trạng thái sang 'Ngừng kinh doanh' thay vì xóa.");
+            }
         }
         header("Location: index.php?action=admin_products");
         exit;

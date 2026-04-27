@@ -96,6 +96,32 @@
             </div>
         </div>
 
+        <?php if (!empty($extra_images)): ?>
+        <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <label class="block text-sm font-bold text-gray-700 mb-4">Ảnh phụ hiện tại</label>
+            <div class="grid grid-cols-3 gap-3">
+                <?php foreach ($extra_images as $img): ?>
+                    <div class="relative group">
+                        <img src="/web-shop-php/asset/<?= $img['image'] ?>" class="w-full h-20 object-cover rounded-lg border border-gray-100">
+                        <a href="index.php?action=delete_product_image&id=<?= $img['image_id'] ?>&product_id=<?= $product['product_id'] ?>" 
+                           class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 shadow-lg"
+                           onclick="return confirm('Bạn có chắc muốn xóa ảnh này?')">
+                            <i class="ri-close-line text-sm"></i>
+                        </a>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Ảnh phụ (Gallery)</label>
+        <!-- Quan trọng: name phải có [] và thuộc tính multiple -->
+        <input type="file" name="extra_images[]" multiple 
+               class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-black outline-none">
+        <p class="text-gray-500 text-xs mt-1">Bạn có thể chọn nhiều ảnh cùng lúc (định dạng jpg, png, webp).</p>
+    </div>
+    
         <button type="submit" class="w-full bg-black text-white py-4 rounded-2xl font-bold shadow-xl shadow-black/10 hover:shadow-black/20 hover:scale-[1.01] transition-all">
             <?= $product ? 'Cập nhật sản phẩm' : 'Lưu sản phẩm' ?>
         </button>

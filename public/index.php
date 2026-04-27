@@ -164,6 +164,9 @@ switch ($action) {
     case 'save_product':
         $productCtrl->save();
         break;
+    case 'delete_product_image':
+        $productCtrl->deleteImage();
+        break;
     case 'delete_product':
         $productCtrl->delete();
         break;

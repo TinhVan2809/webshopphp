@@ -112,6 +112,12 @@ class Controller
         $stmt->execute(['id' => $id, 'user_id' => $user_id]);
         $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // Lấy danh sách ảnh phụ từ bảng product_images
+        $imgQuery = "SELECT image FROM product_images WHERE product_id = :id";
+        $imgStmt = $db->prepare($imgQuery);
+        $imgStmt->execute(['id' => $id]);
+        $extra_images = $imgStmt->fetchAll(PDO::FETCH_ASSOC);
+
         include_once PROJECT_ROOT . '/components/header.php';
 
         if (!$product): ?>
@@ -120,10 +126,25 @@ class Controller
                 <a href="index.php" class="text-blue-600 hover:underline">Quay lại trang chủ</a>
             </div>
         <?php else: ?>
-            <main class="container mx-auto px-7 py-10">
+            <main class="container mx-auto px-7 py-10 mt-30">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div>
-                        <img src="/web-shop-php/asset/<?php echo $product['thumbnail']; ?>" alt="<?php echo $product['name']; ?>" class="w-full rounded-2xl shadow-lg">
+                        <img id="main-image" src="/web-shop-php/asset/<?php echo $product['thumbnail']; ?>" alt="<?php echo $product['name']; ?>" class="w-full rounded-2xl shadow-lg transition-all duration-300">
+                        
+                        <?php if (!empty($extra_images)): ?>
+                            <div class="grid grid-cols-4 gap-4 mt-4">
+                                <!-- Hiển thị thumbnail chính như một phần của gallery -->
+                                <img src="/web-shop-php/asset/<?php echo $product['thumbnail']; ?>" 
+                                     class="w-full aspect-square object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-black transition-all"
+                                     onclick="document.getElementById('main-image').src=this.src">
+                                
+                                <?php foreach ($extra_images as $img): ?>
+                                    <img src="/web-shop-php/asset/<?php echo $img['image']; ?>" 
+                                         class="w-full aspect-square object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-black transition-all"
+                                         onclick="document.getElementById('main-image').src=this.src">
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <div>
                         <h1 class="text-4xl font-bold mb-2"><?php echo $product['name']; ?></h1>
