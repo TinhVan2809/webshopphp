@@ -16,7 +16,7 @@
 </head>
 
 <body>
-    <header class="fixed z-1000 top-0 flex w-full justify-between items-center p-4 md:p-7 z-50 bg-white">
+    <header class="fixed z-5000 top-0 flex w-full justify-between items-center p-4 md:p-7 bg-white">
         <div class="flex justify-center items-center gap-4 lg:gap-10">
             <div class="flex justify-center items-center">
                 <img src="../asset/wf.png" class="w-12 md:w-20">

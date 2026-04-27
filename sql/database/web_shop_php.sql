@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th4 27, 2026 lúc 08:54 AM
+-- Thời gian đã tạo: Th4 27, 2026 lúc 10:39 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -84,6 +84,21 @@ CREATE TABLE `favority` (
   `user_id` int(11) NOT NULL,
   `create_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `favority`
+--
+
+INSERT INTO `favority` (`farority_id`, `product_id`, `user_id`, `create_at`) VALUES
+(1, 13, 12, '2026-04-27 07:07:31'),
+(2, 12, 12, '2026-04-27 07:07:39'),
+(3, 17, 12, '2026-04-27 07:07:44'),
+(7, 17, 15, '2026-04-27 07:08:29'),
+(8, 14, 15, '2026-04-27 07:09:42'),
+(9, 13, 15, '2026-04-27 07:28:39'),
+(10, 15, 15, '2026-04-27 07:28:43'),
+(11, 12, 15, '2026-04-27 07:28:51'),
+(12, 10, 15, '2026-04-27 07:40:56');
 
 -- --------------------------------------------------------
 
@@ -433,7 +448,8 @@ INSERT INTO `users` (`user_id`, `name`, `username`, `password`, `role`, `status`
 (4, 'T├¡nh V─ân', 'tinhlu703@gmail.com', '$2b$10$Q.o5HJ4sMfrW5Qt1rQnSVuBdyoc8OjQxbEhWm91qIVV2tGlN3fODu', 'customer', 'active', '1', 0, '', 'default_avatar.png', '2026-04-24 07:40:36'),
 (12, 'Tính Văn ', 'username12345', '$2y$10$YNZIEDYKYFeWhAN2InDlnOZVASzo.3I2XnGeHz4u7ia6wfTs0kxta', 'customer', 'active', '1', 0, 'tinhlu703@gmail.com', 'default_avatar.png', '2026-04-26 07:19:52'),
 (13, 'Admin', 'admin', '$2y$10$uIlQiJFyJsCFbEanXxDeEeX7geY9vISXiyZ5xRpbF.uLBJadg9OEy', 'admin', 'active', '1', 0, '', 'default_avatar.png', '2026-04-26 07:20:32'),
-(14, 'tathainguyen', 'thainguyen24', '$2y$10$Ijy7rD4l00LE6UkiKG9c0ueRuVnl1vDLuiOZTP2FKSRXDit.oaDIa', 'customer', 'active', '1', 913775566, 'tathainguyen686@gmail.com', 'default_avatar.png', '2026-04-26 08:56:10');
+(14, 'tathainguyen', 'thainguyen24', '$2y$10$Ijy7rD4l00LE6UkiKG9c0ueRuVnl1vDLuiOZTP2FKSRXDit.oaDIa', 'customer', 'active', '1', 913775566, 'tathainguyen686@gmail.com', 'default_avatar.png', '2026-04-26 08:56:10'),
+(15, 'Tính Văn ', 'username123456', '$2y$10$RZgybUwA9ER76PiWe1GNbeQTrXw9R7uVDaOxpyIfM4feKzApTkozi', 'customer', 'active', '1', 0, '', 'default_avatar.png', '2026-04-27 07:08:17');
 
 -- --------------------------------------------------------
 
@@ -688,7 +704,7 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT cho bảng `favority`
 --
 ALTER TABLE `favority`
-  MODIFY `farority_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `farority_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT cho bảng `inventory`
@@ -742,7 +758,7 @@ ALTER TABLE `reviews`
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT cho bảng `user_address`

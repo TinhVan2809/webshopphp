@@ -14,6 +14,9 @@ http://localhost/webshopphp/public/index.php
     customer12345
     12345678
 ```
+###
+
+![](/asset/Screenshot%202026-04-27%20103946.png)
 
 ### Các lỗi thường gặp
 **Page not found**
