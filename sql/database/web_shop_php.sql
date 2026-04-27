@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th4 28, 2026 lúc 12:12 AM
+-- Thời gian đã tạo: Th4 28, 2026 lúc 12:53 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -41,7 +41,7 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`cart_id`, `user_id`, `product_id`, `variant_id`, `add_at`, `quantity`) VALUES
-(39, 12, 1, 2, '2026-04-27 22:02:23', 1);
+(49, 12, 13, NULL, '2026-04-27 22:51:32', 1);
 
 -- --------------------------------------------------------
 
@@ -118,8 +118,8 @@ CREATE TABLE `inventory` (
 --
 
 INSERT INTO `inventory` (`inventory_id`, `product_id`, `quantity`, `reserved_quantity`, `min_stock_level`, `status`, `last_updated`, `variant_id`) VALUES
-(1, 1, 50, 5, 10, 'in_stock', '2026-04-21 10:14:58', 1),
-(2, 1, 40, 2, 10, 'in_stock', '2026-04-21 10:14:58', 2),
+(1, 1, 49, 5, 10, 'in_stock', '2026-04-27 22:14:34', 1),
+(2, 1, 39, 2, 10, 'in_stock', '2026-04-27 22:14:34', 2),
 (3, 1, 30, 0, 10, 'in_stock', '2026-04-21 10:14:58', 3),
 (4, 1, 20, 1, 10, 'low_stock', '2026-04-21 10:14:58', 4),
 (5, 2, 25, 3, 5, 'in_stock', '2026-04-21 10:14:58', 5),
@@ -152,10 +152,10 @@ INSERT INTO `manufacturers` (`manufacturer_id`, `manufacturer_name`, `create_at`
 (5, 'New Balance', '2026-04-21 09:35:55', NULL),
 (6, 'Lululemon', '2026-04-21 09:35:55', NULL),
 (7, 'Chanel', '2026-04-25 12:54:35', NULL),
-(8, 'Adidas', '2026-04-25 12:54:35', NULL),
+(8, 'Louis', '2026-04-25 12:54:35', NULL),
 (9, 'Puma', '2026-04-25 12:54:35', NULL),
 (10, 'New Balance', '2026-04-25 12:54:35', NULL),
-(11, 'Under Armour', '2026-04-25 12:54:35', NULL);
+(11, 'Gucci\r\n', '2026-04-25 12:54:35', NULL);
 
 -- --------------------------------------------------------
 
@@ -222,7 +222,8 @@ INSERT INTO `orders` (`order_id`, `user_id`, `order_code`, `status`, `payment_st
 (28, 12, 'ORD20260427220421182', 'pending', 'unpaid', 9900000.00, 0.00, 30000.00, 10920000.00, NULL, NULL, NULL, 'Tính Văn ', '0', '', '', '', '', NULL, '2026-04-27 20:04:21', '2026-04-27 20:04:21'),
 (29, 12, 'ORD20260427220521552', 'confirmed', 'unpaid', 2800000.00, 0.00, 30000.00, 3110000.00, NULL, NULL, NULL, 'Tính Văn ', '0818177533', 'TP Hồ Chí Minh', 'Quận Bình Thạnh', 'Phường 1', 'Ấp Đầu Sấu', NULL, '2026-04-27 20:05:21', '2026-04-27 20:55:22'),
 (30, 12, 'ORD20260427221101312', 'pending', 'unpaid', 3900000.00, 0.00, 30000.00, 4320000.00, NULL, NULL, NULL, 'Tính Văn ', '0818177533', 'TP Hồ Chí Minh', 'Phú Tân', 'Tân Hải', 'Ấp Đầu Sấu', NULL, '2026-04-27 20:11:01', '2026-04-27 20:11:01'),
-(31, 12, 'ORD20260427235059358', 'pending', 'unpaid', 1500000.00, 0.00, 30000.00, 1680000.00, NULL, NULL, NULL, 'Tính Văn ', '0818177533', 'Cần Thơ', 'Quận Ninh Kiều', 'Phường An Hòa', 'Ấp Đầu Sấu', NULL, '2026-04-27 21:50:59', '2026-04-27 21:50:59');
+(31, 12, 'ORD20260427235059358', 'pending', 'unpaid', 1500000.00, 0.00, 30000.00, 1680000.00, NULL, NULL, NULL, 'Tính Văn ', '0818177533', 'Cần Thơ', 'Quận Ninh Kiều', 'Phường An Hòa', 'Ấp Đầu Sấu', NULL, '2026-04-27 21:50:59', '2026-04-27 21:50:59'),
+(32, 12, 'ORD20260428001434755', 'pending', 'unpaid', 900000.00, 0.00, 30000.00, 1020000.00, NULL, NULL, NULL, 'Tính Văn ', '0818177533', 'Cần Thơ', 'Quận Ninh Kiều', 'Phường Cái Khế', 'Ấp Đầu Sấu', NULL, '2026-04-27 22:14:34', '2026-04-27 22:14:34');
 
 -- --------------------------------------------------------
 
@@ -293,7 +294,9 @@ INSERT INTO `order_items` (`order_item_id`, `order_id`, `product_id`, `variant_i
 (43, 28, 1, NULL, ' Pickleball NikeCourt Air Zoom Vapor 11', 'nikecourt-air-zoom-vapor-11-mens-hard-court-tennis-shoes-03_720x720xcrop-preview.png', NULL, 1500000.00, 1, 1500000.00),
 (44, 29, 12, NULL, 'Nike Air Zoom Pegasus', 'nike_pegasus_40.jpg', NULL, 2800000.00, 1, 2800000.00),
 (45, 30, 13, NULL, 'Adidas Ultraboost 22', 'adidas_ultraboost_22.jpg', NULL, 3900000.00, 1, 3900000.00),
-(46, 31, 1, NULL, ' Pickleball NikeCourt Air Zoom Vapor 11', 'nikecourt-air-zoom-vapor-11-mens-hard-court-tennis-shoes-03_720x720xcrop-preview.png', NULL, 1500000.00, 1, 1500000.00);
+(46, 31, 1, NULL, ' Pickleball NikeCourt Air Zoom Vapor 11', 'nikecourt-air-zoom-vapor-11-mens-hard-court-tennis-shoes-03_720x720xcrop-preview.png', NULL, 1500000.00, 1, 1500000.00),
+(47, 32, 1, 2, ' Pickleball NikeCourt Air Zoom Vapor 11 (size: M, color: black)', 'nikecourt-air-zoom-vapor-11-mens-hard-court-tennis-shoes-03_720x720xcrop-preview.png', 'NIKE-TS-M-BLACK', 450000.00, 1, 450000.00),
+(48, 32, 1, 1, ' Pickleball NikeCourt Air Zoom Vapor 11 (size: M, color: red)', 'nikecourt-air-zoom-vapor-11-mens-hard-court-tennis-shoes-03_720x720xcrop-preview.png', 'NIKE-TS-M-RED', 450000.00, 1, 450000.00);
 
 -- --------------------------------------------------------
 
@@ -719,7 +722,7 @@ ALTER TABLE `voucher_products`
 -- AUTO_INCREMENT cho bảng `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT cho bảng `categories`
@@ -749,13 +752,13 @@ ALTER TABLE `manufacturers`
 -- AUTO_INCREMENT cho bảng `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID ????n h??ng', AUTO_INCREMENT=32;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID ????n h??ng', AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT cho bảng `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID chi ti???t ????n h??ng', AUTO_INCREMENT=47;
+  MODIFY `order_item_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID chi ti???t ????n h??ng', AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT cho bảng `payments`
