@@ -39,6 +39,10 @@ class Controller
         // Include most sold
         require_once PROJECT_ROOT . '/components/most_sold.php';
         (new Most_sold())->mostSold();
+
+        // Include most favority
+        require_once PROJECT_ROOT . '/components/most_favority.php';
+        (new most_favority())->mostFavority();
 ?>
 
         <main class="container mx-auto px-7 py-10 mt-30">

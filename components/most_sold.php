@@ -30,7 +30,7 @@ class Most_sold
                  <hr class="border border-black w-125">
                 <div class="">
                     <h1 class="text-xl font-[550]">Best sellers</h1>
-                    <a href="#" class="text-sm">Xem thêm <i class="ri-arrow-right-line"></i></a>
+                    <a href="#" class="text-sm">View all <i class="ri-arrow-right-line"></i></a>
                 </div>
                 <hr class="border border-black w-125">
                </div>
@@ -58,7 +58,7 @@ class Most_sold
                             </div>
 
                             <div class="flex flex-col gap-1">
-                                <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest"><?php echo $product['category_name']; ?></span>
+                                <span class="text-[10px] font-bold text-red-600 uppercase tracking-widest"><?php echo $product['category_name']; ?></span>
                                 <a href="index.php?action=detail&id=<?php echo $product['product_id']; ?>">
                                     <h3 class="font-bold text-gray-900 hover:text-blue-600 transition-colors truncate"><?php echo htmlspecialchars($product['name']); ?></h3>
                                 </a>
