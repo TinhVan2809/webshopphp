@@ -1,19 +1,44 @@
-<footer class="grid md:grid-cols-3 bg-[#36522e] text-[#f4bb3e] justify-center gap-10 p-10">
-    <div class="flex justify-center">
-        <img src="../asset/footer1.jpg" class="w-65">
+<footer class="w-full flex flex-col md:px-20 md:py-10">
+    <div class="grid md:grid-cols-2 w-full justify-center md:justify-between gap-10">
+        <div class="flex items-center">
+            <img src="../asset/wf.png" class="w-30">
+            <div class="flex justify-center items-center border border-stone-500/50 h-fit p-1 rounded-[23px] gap-2">
+                <input type="text" placeholder="Email" class="w-40 outline-0 px-3">
+                <button class="bg-black text-white px-4 py-2 rounded-[20px]">Subscribe</button>
+            </div>
+        </div>
+        <nav>
+            <ul class="grid grid-cols-4 gap-5 md:gap-0">
+                <li class="flex flex-col gap-2">
+                    <p class="font-[500]">Homespace</p>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Products</a>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Blogs</a>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Contact</a>
+                </li>
+                <li class="flex flex-col gap-2">
+                    <p class="font-[500]">Studio</p>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Signature works</a>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">About</a>
+                </li>
+                <li class="flex flex-col gap-2">
+                    <p class="font-[500]">Products</p>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Shirt</a>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Shoes</a>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Bags</a>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">pants</a>
+                </li>
+                <li class="flex flex-col gap-2">
+                    <p class="font-[500]">Connect</p>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Instagram</a>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">X</a>
+                    <a class="text-sm md:text-md hover:underline underline-ofset-1">Facebook</a>
+                </li>
+            </ul>
+        </nav>
     </div>
-    <div class="flex flex-col gap-3 items-start">
-        <h2 class="text-2xl font-blod">Issue: Products</h2>
-        <span class="text-sm">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis earum culpa eum officia. Blanditiis vel tempore provident cum consequuntur repudiandae veritatis numquam nam ab fuga.</span>
-        <button class="bg-[#f4bb3e] text-black px-3 py-1 font-blod rounded-[20px]">Shop Now</button>
-    </div>
-    <div class="flex flex-col gap-1">
-        <p class="mb-3">Find dhloop stocked at</p>
-        <a href="#" class="text-sm hover:underline">The Farm, Chemanai</a>
-        <a href="#" class="text-sm hover:underline">G5A, Mumbai</a>
-        <a href="#" class="text-sm hover:underline">Omnivore, Bookstore, San Fransisco</a>
-        <a href="#" class="text-sm hover:underline">McNally, Jackson, Books, New York City</a>
-        <a href="#" class="text-sm hover:underline">View All Stockist</a>
+    <div class="flex mt-10 flex-col gap-5 justify-center items-center">
+        <p class="logo-name text-[50px] md:text-[80px]">HASEKI STORE OFFICIAL</p>
+        <p>&copy; 2026 . All right Reserves</p>
     </div>
 </footer>
 

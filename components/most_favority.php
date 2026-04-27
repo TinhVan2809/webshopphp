@@ -23,10 +23,10 @@ class most_favority
         $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if ($products): ?>
-            <section class="container mx-auto w-full mt-10 p-10">
+            <section class="hidden md:block container mx-auto mt-10 p-10">
 
                 <div class="mb-10">
-                    <div class="flex flex justify-center items-center gap-6">
+                    <div class="flex justify-center items-center gap-6">
                         <hr class="border border-black w-125">
                         <div class="">
                             <h1 class="text-xl font-[550]">Most Loved</h1>
