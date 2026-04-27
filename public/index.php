@@ -33,6 +33,9 @@ switch ($action) {
     case 'detail':
         $controller->detail();
         break;
+    case 'category':
+        $controller->category();
+        break;
     case 'cart':
         $cartCtrl->index();
         break;

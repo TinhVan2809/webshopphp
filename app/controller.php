@@ -22,19 +22,32 @@ class Controller
 
         // Include header (đã có sẵn HTML, Head, Body mở)
         include_once PROJECT_ROOT . '/components/header.php';
+
+        // Include banner 
+        include_once PROJECT_ROOT . '/components/banner.php';
+
+        // Include Danh mục
+        include_once PROJECT_ROOT . '/components/categories.php';
+
+        // Include introducing
+        include_once PROJECT_ROOT . '/components/introducing.php';
+
+        // Include most sold
+        require_once PROJECT_ROOT . '/components/most_sold.php';
+        (new Most_sold())->mostSold();
 ?>
 
         <main class="container mx-auto px-7 py-10 mt-30">
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <?php foreach ($products as $product): ?>
-                    <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <div class="rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                         <a href="index.php?action=detail&id=<?php echo $product['product_id']; ?>" class="block relative h-64 bg-gray-100">
                             <img src="/web-shop-php/asset/<?php echo $product['thumbnail']; ?>"
                                 alt="<?php echo $product['name']; ?>"
                                 class="w-full h-full object-cover">
                             <?php if ($product['is_new']): ?>
-                                <span class="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">Mới</span>
+                                <span class="absolute top-2 left-2 text-black font-[550] text-xs px-2 py-1 rounded">New</span>
                             <?php endif; ?>
                             <div class="absolute top-0 right-0 p-3">
                                 <i class="ri-heart-3-line text-2xl"></i>
@@ -46,18 +59,15 @@ class Controller
                             <a href="index.php?action=detail&id=<?php echo $product['product_id']; ?>">
                                 <h2 class="font-bold text-lg mb-2 truncate hover:text-blue-600 transition-colors"><?php echo $product['name']; ?></h2>
                             </a>
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-2"><?php echo $product['short_description']; ?></p>
+
 
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-red-600 font-bold"><?php echo number_format($product['discount_price'] ?? $product['price'], 0, ',', '.'); ?>₫</p>
+                                    <p class="font-bold"><?php echo number_format($product['discount_price'] ?? $product['price'], 0, ',', '.'); ?>₫</p>
                                     <?php if ($product['discount_price']): ?>
                                         <p class="text-gray-400 text-xs line-through"><?php echo number_format($product['price'], 0, ',', '.'); ?>₫</p>
                                     <?php endif; ?>
                                 </div>
-                                <button class="bg-black text-white p-2 rounded-full hover:bg-gray-800 transition-colors btn-add-to-cart" data-id="<?php echo $product['product_id']; ?>">
-                                    <i class="ri-shopping-cart-line pointer-events-none"></i>
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -131,12 +141,190 @@ class Controller
                     </div>
                 </div>
             </main>
-<?php endif;
-       include_once PROJECT_ROOT . '/components/footer.php';
+        <?php endif;
+        include_once PROJECT_ROOT . '/components/footer.php';
     }
 
+    public function category()
+    {
+        $id = $_GET['id'] ?? null;
+        $sort = $_GET['sort'] ?? 'newest';
+        $manufacturer_id = $_GET['manufacturer_id'] ?? 'all'; // Lấy tham số hãng sản xuất
+        $price_range = $_GET['price_range'] ?? 'all';
+        if (!$id) {
+            header("Location: index.php");
+            exit;
+        }
 
-      public function getProfileByUser()
+        $database = new Database();
+        $db = $database->getConnection();
+
+        // 1. Lấy thông tin tên danh mục để hiển thị tiêu đề trang
+        $catQuery = "SELECT category_name FROM categories WHERE category_id = :id";
+        $catStmt = $db->prepare($catQuery);
+        $catStmt->execute(['id' => $id]);
+        $category = $catStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$category) {
+            header("Location: index.php");
+            exit;
+        }
+
+        // Lấy danh sách các hãng sản xuất để hiển thị bộ lọc
+        $manufacturersQuery = "SELECT manufacturer_id, manufacturer_name FROM manufacturers ORDER BY manufacturer_name ASC";
+        $manufacturersStmt = $db->prepare($manufacturersQuery);
+        $manufacturersStmt->execute();
+        $manufacturers = $manufacturersStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Xác định logic sắp xếp dựa trên tham số 'sort'
+        $orderBy = "p.created_at DESC";
+        if ($sort === 'price_asc') {
+            $orderBy = "COALESCE(p.discount_price, p.price) ASC";
+        } elseif ($sort === 'price_desc') {
+            $orderBy = "COALESCE(p.discount_price, p.price) DESC";
+        }
+
+        // Xác định điều kiện lọc giá
+        $priceCondition = "";
+        if ($price_range === 'under-500') {
+            $priceCondition = " AND COALESCE(p.discount_price, p.price) < 500000";
+        } elseif ($price_range === '500-2000') {
+            $priceCondition = " AND COALESCE(p.discount_price, p.price) BETWEEN 500000 AND 2000000";
+        } elseif ($price_range === 'over-2000') {
+            $priceCondition = " AND COALESCE(p.discount_price, p.price) > 2000000";
+        }
+
+        // Xác định điều kiện lọc theo hãng sản xuất
+        $manufacturerCondition = "";
+        $params = ['id' => $id];
+        if ($manufacturer_id !== 'all') {
+            $manufacturerCondition = " AND p.manufacturer_id = :manufacturer_id";
+            $params['manufacturer_id'] = $manufacturer_id;
+        }
+
+
+        // 2. Truy vấn lấy tất cả sản phẩm thuộc danh mục này
+        $query = "SELECT p.*, c.category_name, m.manufacturer_name 
+                  FROM products p 
+                  LEFT JOIN categories c ON p.category_id = c.category_id 
+                   LEFT JOIN manufacturers m ON p.manufacturer_id = m.manufacturer_id
+                  WHERE p.category_id = :id AND p.status = 'active' $priceCondition $manufacturerCondition
+                  ORDER BY $orderBy";
+
+        $stmt = $db->prepare($query);
+        $stmt->execute($params);
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 3. Hiển thị View danh sách sản phẩm
+        include_once PROJECT_ROOT . '/components/header.php';
+        ?>
+        <?php
+        if ($id == 1):
+        ?>
+            <div class="mt-35 w-full relative">
+                <img src="../asset/banner-shoes2.png" class="">
+                <div class="absolute bottom-0 z-100 p-10">
+                    <p class="text-white">Giầy thể thao</p>
+                    <p class="text-sm text-white opacity-50">Lựa chọn những đôi giày phù hợp với đôi chân bạn.</p>
+                </div>
+            </div>
+        <?php
+        elseif ($id == 2): ?>
+            <div class="mt-35 w-full relative">
+                <div class="grid grid-cols-2">
+                    <img src="../asset/banner-shirt-main.png" class="w-full">
+                    <img src="../asset/banner-shirt-main2.png" class="w-full">
+                </div>
+                <div class="absolute bottom-0 z-100 p-7">
+                    <p class="text-white">Áo thời trang</p>
+                    <p class="text-white text-sm">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Maxime minus totam illo ipsum unde veritatis alias</p>
+                </div>
+            </div>
+        <?php elseif ($id == 3): ?>
+            <div class="mt-35 w-full">
+                <img src="../asset/banner-pant2.jpg" class="">
+            </div>
+
+        <?php elseif ($id == 4): ?>
+            <div class="mt-35 w-full relative">
+                <img src="../asset/banner-bag2.avif" class="">
+                <div class="absolute bottom-0 z-100 p-10">
+                    <p>Túi sách tay</a>
+                    <p class="text-sm opacity-50">Thoải mái lựa chọn tất cả thương hiệu túi sách chính hãng của chúng tôi.</p>
+                </div>
+            </div>
+        <?php endif; ?>
+        <main class="container mx-auto px-7 py-10 mt-10">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold uppercase italic tracking-tighter">Category: <?php echo htmlspecialchars($category['category_name']); ?></h1>
+                    <p class="text-gray-500 mt-2">Showing <?php echo count($products); ?> results found</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Hãng:</label>
+                        <select onchange="updateFilters('manufacturer_id', this.value)" class="bg-white border-none text-sm outline-none cursor-pointer font-medium">
+                            <option value="all" <?php echo $manufacturer_id === 'all' ? 'selected' : ''; ?>>Tất cả hãng</option>
+                            <?php foreach ($manufacturers as $manufacturer): ?>
+                                <option value="<?php echo $manufacturer['manufacturer_id']; ?>" <?php echo (string)$manufacturer_id === (string)$manufacturer['manufacturer_id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($manufacturer['manufacturer_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Khoảng giá:</label>
+                        <select onchange="updateFilters('price_range', this.value)" class="bg-white border-none text-sm outline-none cursor-pointer font-medium">
+                            <option value="all" <?php echo $price_range === 'all' ? 'selected' : ''; ?>>Tất cả giá</option>
+                            <option value="under-500" <?php echo $price_range === 'under-500' ? 'selected' : ''; ?>>Dưới 500k</option>
+                            <option value="500-2000" <?php echo $price_range === '500-2000' ? 'selected' : ''; ?>>500k - 2tr</option>
+                            <option value="over-2000" <?php echo $price_range === 'over-2000' ? 'selected' : ''; ?>>Trên 2tr</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Sắp xếp:</label>
+                        <select onchange="updateFilters('sort', this.value)" class="bg-white border-none text-sm outline-none cursor-pointer font-medium">
+                            <option value="newest" <?php echo $sort === 'newest' ? 'selected' : ''; ?>>Mới nhất</option>
+                            <option value="price_asc" <?php echo $sort === 'price_asc' ? 'selected' : ''; ?>>Giá tăng dần</option>
+                            <option value="price_desc" <?php echo $sort === 'price_desc' ? 'selected' : ''; ?>>Giá giảm dần</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <?php if (empty($products)): ?>
+                    <div class="col-span-full text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        <p class="text-gray-400">Không tìm thấy sản phẩm nào trong danh mục này.</p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($products as $product): ?>
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+                            <a href="index.php?action=detail&id=<?php echo $product['product_id']; ?>" class="block relative h-64 bg-gray-100">
+                                <img src="/web-shop-php/asset/<?php echo $product['thumbnail']; ?>" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                                <div class="p-4 bg-white/90 absolute bottom-0 w-full translate-y-full group-hover:translate-y-0 transition-transform">
+                                    <h3 class="font-bold text-sm truncate"><?php echo $product['name']; ?></h3>
+                                    <p class="text-red-600 font-bold"><?php echo number_format($product['discount_price'] ?? $product['price'], 0, ',', '.'); ?>₫</p>
+                                </div>
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </main>
+
+        <script>
+            function updateFilters(key, value) {
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set(key, value);
+                window.location.href = 'index.php?' + urlParams.toString();
+            }
+        </script>
+        <?php
+        include_once PROJECT_ROOT . '/components/footer.php';
+    }
+
+    public function getProfileByUser()
     {
         // 1. Kiểm tra xác thực: Nếu chưa đăng nhập thì không cho vào
         if (!isset($_SESSION['user_id'])) {
@@ -165,21 +353,21 @@ class Controller
 
         include_once PROJECT_ROOT . '/components/header.php';
 
-       if(!$user): ?>
+        if (!$user): ?>
             <div class="container mx-auto py-20 text-center">
                 <p class="text-xl font-medium">Trang không tồn tại hoặc tài khoản đã bị khóa.</p>
             </div>
-       <?php else: ?>
+        <?php else: ?>
             <main class="container mx-auto px-7 py-20 mt-10">
                 <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-100">
                     <h1 class="text-3xl font-bold mb-8 flex items-center gap-3">
                         <i class="ri-user-settings-line"></i> Thông tin cá nhân
                     </h1>
-                    
+
                     <div class="space-y-5">
                         <div class="flex flex-col items-center mb-6">
-                            <img src="/web-shop-php/asset/<?php echo $user['avatar'] ?: 'default_avatar.png'; ?>" 
-                                 class="w-32 h-32 rounded-full object-cover border-4 border-gray-100 shadow-sm">
+                            <img src="/web-shop-php/asset/<?php echo $user['avatar'] ?: 'default_avatar.png'; ?>"
+                                class="w-32 h-32 rounded-full object-cover border-4 border-gray-100 shadow-sm">
                         </div>
                         <div class="flex border-b border-gray-50 pb-3">
                             <span class="w-40 text-gray-500">Họ và tên:</span>
@@ -205,9 +393,9 @@ class Controller
                     </div>
                 </div>
             </main>
-       <?php endif;
+        <?php endif;
 
-       include_once PROJECT_ROOT . '/components/footer.php';
+        include_once PROJECT_ROOT . '/components/footer.php';
     }
 
     public function editProfile()
@@ -234,10 +422,10 @@ class Controller
         <main class="container mx-auto px-7 py-20 mt-10">
             <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-100">
                 <h1 class="text-3xl font-bold mb-8 italic">Chỉnh sửa thông tin</h1>
-                
+
                 <form action="index.php?action=update_profile" method="POST" enctype="multipart/form-data" class="space-y-6">
                     <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
-                    
+
                     <div class="flex flex-col items-center mb-4">
                         <img src="/web-shop-php/asset/<?php echo $user['avatar'] ?: 'default_avatar.png'; ?>" class="w-24 h-24 rounded-full object-cover mb-4 border shadow-sm">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Thay đổi ảnh đại diện</label>
@@ -246,14 +434,14 @@ class Controller
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
-                        <input type="text" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" 
-                               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black outline-none" required>
+                        <input type="text" name="name" value="<?php echo htmlspecialchars($user['name']); ?>"
+                            class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black outline-none" required>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
-                        <input type="text" name="number_phone" value="<?php echo htmlspecialchars($user['number_phone']); ?>" 
-                               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black outline-none">
+                        <input type="text" name="number_phone" value="<?php echo htmlspecialchars($user['number_phone']); ?>"
+                            class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:ring-2 focus:ring-black outline-none">
                     </div>
 
                     <div class="pt-4 flex gap-4">
@@ -263,7 +451,7 @@ class Controller
                 </form>
             </div>
         </main>
-        <?php
+<?php
         include_once PROJECT_ROOT . '/components/footer.php';
     }
 
@@ -344,7 +532,7 @@ class Controller
             try {
                 $query = "INSERT INTO users (name, username, password, gender, number_phone, gmail, role, status) 
                           VALUES (:name, :username, :password, :gender, :phone, :gmail, 'customer', 'active')";
-                
+
                 $stmt = $db->prepare($query);
                 $result = $stmt->execute([
                     'name' => $name,
