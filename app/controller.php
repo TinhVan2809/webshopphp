@@ -120,9 +120,10 @@ class Controller
         $extra_images = $imgStmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Lấy danh sách biến thể và thuộc tính của từng biến thể
-        $variantQuery = "SELECT pv.*, va.attribute_name, va.attribute_value 
+        $variantQuery = "SELECT pv.*, va.attribute_name, va.attribute_value, i.available_quantity 
                         FROM product_variants pv 
                         LEFT JOIN variant_attributes va ON pv.variant_id = va.variant_id 
+                        LEFT JOIN inventory i ON pv.variant_id = i.variant_id
                         WHERE pv.product_id = :id";
         $vStmt = $db->prepare($variantQuery);
         $vStmt->execute(['id' => $id]);
@@ -189,7 +190,8 @@ class Controller
                                         <div class="variant-option border rounded-xl p-3 cursor-pointer hover:border-black transition-all group relative" 
                                              data-variant-id="<?php echo $v['variant_id']; ?>"
                                              data-price="<?php echo $v['price'] ?: $product['discount_price'] ?? $product['price']; ?>"
-                                             data-image="<?php echo $v['image'] ? '/web-shop-php/asset/' . $v['image'] : ''; ?>">
+                                             data-image="<?php echo $v['image'] ? '/web-shop-php/asset/' . $v['image'] : ''; ?>"
+                                             data-stock="<?php echo $v['available_quantity'] ?? 0; ?>">
                                             
                                             <div class="text-xs font-bold text-gray-500 mb-1"><?php echo $v['sku']; ?></div>
                                             <div class="text-sm">
@@ -222,7 +224,7 @@ class Controller
                             </button>
                         </div>
                         <div class="">
-                            <span>Tồn kho (<?php echo $product['available_quantity']; ?>)</span>
+                            <span>Tồn kho (<span id="stock-count"><?php echo $product['available_quantity'] ?? 0; ?></span>)</span>
                         </div>
                     </div>
                 </div>

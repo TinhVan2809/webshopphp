@@ -86,6 +86,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnAddToCart.setAttribute('data-variant-id', variantId);
             }
 
+            // Cập nhật số lượng tồn kho
+            const stock = this.getAttribute('data-stock');
+            const stockCountDisplay = document.getElementById('stock-count');
+            if (stockCountDisplay) {
+                stockCountDisplay.textContent = stock;
+            }
+
             // Cập nhật ảnh chính nếu biến thể có ảnh riêng
             const variantImg = this.getAttribute('data-image');
             if (variantImg) {
@@ -100,6 +107,14 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             let productId = this.getAttribute('data-id');
             let variantId = this.getAttribute('data-variant-id') || '';
+
+            // Kiểm tra nếu sản phẩm có biến thể mà người dùng chưa chọn
+            const variantContainer = document.getElementById('variant-container');
+            if (variantContainer && !variantId) {
+                showToast('Vui lòng chọn phiên bản sản phẩm (Size/Màu sắc)!', 'error');
+                return;
+            }
+
             // Check if there is a quantity input for details page
             let quantityInput = document.getElementById('product-quantity');
             let quantity = quantityInput ? quantityInput.value : 1;
