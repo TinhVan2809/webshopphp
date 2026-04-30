@@ -158,11 +158,13 @@ class CheckoutController
                 VALUES (:order_id, :product_id, :variant_id, :product_name, :product_image, :sku, :price, :quantity, :total_price)
             ");
 
-            // Câu lệnh cập nhật kho hàng (trừ số lượng tồn kho)
+            // 1. Chuẩn bị câu lệnh trừ kho
+            // Sử dụng <=> để so sánh variant_id (xử lý được cả trường hợp NULL)
+            // Kiểm tra available_quantity để đảm bảo tính cả lượng hàng đang bị "giữ chỗ"
             $stmtUpdateStock = $this->db->prepare("
                 UPDATE inventory 
                 SET quantity = quantity - :qty 
-                WHERE product_id = :pid AND variant_id <=> :vid AND quantity >= :qty
+                WHERE product_id = :pid AND variant_id <=> :vid AND available_quantity >= :qty
             ");
 
             foreach ($cartItems as $item) {
@@ -175,19 +177,23 @@ class CheckoutController
                     $product_name .= ' (' . $item['variant_details'] . ')';
                 }
 
-                // 1. Thực hiện trừ tồn kho ngay trong transaction
+                // 2. Thực hiện trừ tồn kho ngay trong transaction
                 $stmtUpdateStock->execute([
                     'qty' => $item['quantity'],
                     'pid' => $item['product_id'],
                     'vid' => $item['variant_id']
                 ]);
 
-                // Nếu rowCount bằng 0, nghĩa là không tìm thấy bản ghi kho hoặc không đủ số lượng (do điều kiện quantity >= :qty)
+                // Nếu rowCount bằng 0, nghĩa là điều kiện WHERE không thỏa mãn (Hết hàng hoặc sai ID)
                 if ($stmtUpdateStock->rowCount() === 0) {
-                    throw new Exception("Sản phẩm '" . $item['name'] . "' hiện không đủ số lượng trong kho.");
+                    $item_label = $item['name'];
+                    if (!empty($item['variant_details'])) {
+                        $item_label .= ' (' . $item['variant_details'] . ')';
+                    }
+                    throw new Exception("Sản phẩm '{$item_label}' hiện không đủ số lượng trong kho.");
                 }
 
-                // 2. Thêm vào bảng order_items
+                // 3. Thêm vào bảng order_items (Snapshot dữ liệu)
 
                 $stmtItem->execute([
                     'order_id' => $order_id,

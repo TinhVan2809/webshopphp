@@ -11,7 +11,7 @@ http://localhost/web-shop-php/public/index.php
 
 ### Tài khoản khách hàng
 ```bash
-    customer12345
+    username12345
     12345678
 ```
 ###

@@ -23,6 +23,8 @@ class ProductController extends AdminBaseController
         $id = $_GET['id'] ?? null;
         $product = null;
         $extra_images = [];
+        $variants = [];
+
         if ($id) {
             $stmt = $this->db->prepare("SELECT * FROM products WHERE product_id = ?");
             $stmt->execute([$id]);
@@ -32,6 +34,19 @@ class ProductController extends AdminBaseController
             $stmt = $this->db->prepare("SELECT * FROM product_images WHERE product_id = ?");
             $stmt->execute([$id]);
             $extra_images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Lấy danh sách biến thể kèm thuộc tính và tồn kho
+            $vStmt = $this->db->prepare("
+                SELECT pv.*, i.quantity as stock, 
+                       GROUP_CONCAT(CONCAT(va.attribute_name, ':', va.attribute_value)) as attr_string
+                FROM product_variants pv
+                LEFT JOIN variant_attributes va ON pv.variant_id = va.variant_id
+                LEFT JOIN inventory i ON pv.variant_id = i.variant_id
+                WHERE pv.product_id = ?
+                GROUP BY pv.variant_id
+            ");
+            $vStmt->execute([$id]);
+            $variants = $vStmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         $categories = $this->db->query("SELECT * FROM categories")->fetchAll(PDO::FETCH_ASSOC);
@@ -41,7 +56,8 @@ class ProductController extends AdminBaseController
             'product' => $product,
             'categories' => $categories,
             'manufacturers' => $manufacturers,
-            'extra_images' => $extra_images
+            'extra_images' => $extra_images,
+            'variants' => $variants
         ]);
     }
 
@@ -74,6 +90,44 @@ class ProductController extends AdminBaseController
                 $stmt = $this->db->prepare($query);
                 $stmt->execute([$name, $price, $discount_price, $category_id, $manufacturer_id, $sku, $status, $description, $thumbnail]);
                 $id = $this->db->lastInsertId();
+            }
+
+            // --- XỬ LÝ BIẾN THỂ (VARIANTS) ---
+            if (isset($_POST['variants'])) {
+                // Để đơn giản, chúng ta xóa các biến thể cũ và insert mới 
+                // (Lưu ý: Trong thực tế nên cập nhật theo ID để tránh ảnh hưởng đến khóa ngoại nếu có đơn hàng)
+                $this->db->prepare("DELETE FROM product_variants WHERE product_id = ?")->execute([$id]);
+
+                foreach ($_POST['variants'] as $idx => $v) {
+                    if (empty($v['sku'])) continue;
+
+                    $v_image = $v['current_image'] ?? null;
+                    // Xử lý upload ảnh riêng cho từng biến thể
+                    if (isset($_FILES['variant_images']['name'][$idx]) && $_FILES['variant_images']['error'][$idx] == 0) {
+                        $v_filename = time() . '_variant_' . $idx . '_' . $_FILES['variant_images']['name'][$idx];
+                        move_uploaded_file($_FILES['variant_images']['tmp_name'][$idx], PROJECT_ROOT . '/asset/' . $v_filename);
+                        $v_image = $v_filename;
+                    }
+
+                    // 1. Insert product_variants
+                    $stmtV = $this->db->prepare("INSERT INTO product_variants (product_id, sku, price, image) VALUES (?, ?, ?, ?)");
+                    $stmtV->execute([$id, $v['sku'], $v['price'] ?: null, $v_image]);
+                    $variant_id = $this->db->lastInsertId();
+
+                    // 2. Insert variant_attributes (Size, Color...)
+                    if (!empty($v['attrs'])) {
+                        $stmtA = $this->db->prepare("INSERT INTO variant_attributes (variant_id, attribute_name, attribute_value) VALUES (?, ?, ?)");
+                        foreach ($v['attrs'] as $attr_name => $attr_value) {
+                            if (!empty($attr_value)) {
+                                $stmtA->execute([$variant_id, $attr_name, $attr_value]);
+                            }
+                        }
+                    }
+
+                    // 3. Cập nhật inventory
+                    $stmtI = $this->db->prepare("INSERT INTO inventory (product_id, variant_id, quantity) VALUES (?, ?, ?)");
+                    $stmtI->execute([$id, $variant_id, $v['stock'] ?: 0]);
+                }
             }
         }
         // Kiểm tra xem người dùng có chọn ảnh phụ không
