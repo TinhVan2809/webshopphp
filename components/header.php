@@ -36,9 +36,10 @@
                 </ul>
             </nav>
             <!-- Desktop Search -->
-            <div class="hidden lg:flex bg-gray-300/50 rounded-sm gap-1 w-64 px-2 py-1">
+            <div class="hidden lg:flex bg-gray-300/50 rounded-sm gap-1 w-64 px-2 py-1 relative search-container">
                 <i class="ri-search-line"></i>
-                <input type="text" placeholder="Search for..." class="w-full outline-0">
+                <input type="text" id="desktop-search-input" placeholder="Search for..." class="w-full outline-0 search-input">
+                <div id="desktop-search-results" class="absolute top-full left-0 w-80 bg-white shadow-2xl rounded-b-md z-50 overflow-hidden hidden border border-gray-100 mt-1"></div>
             </div>
         </div>
 
@@ -92,9 +93,10 @@
                 <li><a href="#" class="hover:text-green-700">Contact</a></li>
             </ul>
         </nav>
-        <div class="mt-10 bg-gray-100 flex items-center p-3 rounded-xl">
+        <div class="mt-10 bg-gray-100 flex items-center p-3 rounded-xl relative search-container">
             <i class="ri-search-line mr-2 text-gray-400"></i>
-            <input type="text" placeholder="Search for..." class="bg-transparent w-full outline-none">
+            <input type="text" id="mobile-search-input" placeholder="Search for..." class="bg-transparent w-full outline-none search-input">
+            <div id="mobile-search-results" class="absolute top-full left-0 w-full bg-white shadow-2xl rounded-xl z-50 overflow-hidden hidden border border-gray-100 mt-2"></div>
         </div>
     </div>
 
@@ -114,6 +116,51 @@
                 menuIcon.classList.replace('ri-menu-3-line', 'ri-close-line');
             }
         });
+
+        // Search Logic
+        function initSearch(inputSelector, resultsSelector) {
+            const input = document.getElementById(inputSelector);
+            const results = document.getElementById(resultsSelector);
+
+            input.addEventListener('input', function() {
+                const keyword = this.value.trim();
+                if (keyword.length < 2) {
+                    results.innerHTML = '';
+                    results.classList.add('hidden');
+                    return;
+                }
+
+                fetch(`index.php?action=search&keyword=${encodeURIComponent(keyword)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            results.innerHTML = data.map(product => `
+                                <a href="index.php?action=detail&id=${product.product_id}" class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+                                    <img src="/web-shop-php/asset/${product.thumbnail}" class="w-12 h-12 object-cover rounded">
+                                    <div class="flex-1 overflow-hidden">
+                                        <p class="text-sm font-medium text-gray-800 truncate">${product.name}</p>
+                                        <p class="text-xs text-red-600 font-bold">${new Intl.NumberFormat('vi-VN').format(product.discount_price || product.price)}₫</p>
+                                    </div>
+                                </a>
+                            `).join('');
+                            results.classList.remove('hidden');
+                        } else {
+                            results.innerHTML = '<p class="p-4 text-sm text-gray-500 text-center">Không tìm thấy sản phẩm</p>';
+                            results.classList.remove('hidden');
+                        }
+                    });
+            });
+
+            // Đóng kết quả khi click ra ngoài
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !results.contains(e.target)) {
+                    results.classList.add('hidden');
+                }
+            });
+        }
+
+        initSearch('desktop-search-input', 'desktop-search-results');
+        initSearch('mobile-search-input', 'mobile-search-results');
 
     </script>
 </body>

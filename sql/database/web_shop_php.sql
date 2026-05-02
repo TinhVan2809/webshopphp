@@ -155,7 +155,10 @@ INSERT INTO `inventory` (`inventory_id`, `product_id`, `quantity`, `reserved_qua
 (10, 25, 23, 0, 10, 'in_stock', '2026-04-30 22:36:50', 10),
 (11, 26, 20, 0, 10, 'in_stock', '2026-04-30 22:39:51', 11),
 (12, 26, 90, 0, 10, 'in_stock', '2026-04-30 22:39:51', 12),
-(13, 27, 12, 0, 10, 'in_stock', '2026-04-30 22:46:34', 13);
+(13, 27, 12, 0, 10, 'in_stock', '2026-04-30 22:46:34', 13),
+(14, 3, 50, 2, 10, 'in_stock', CURRENT_TIMESTAMP, 14),
+(15, 3, 45, 0, 10, 'in_stock', CURRENT_TIMESTAMP, 15),
+(16, 13, 30, 5, 5, 'in_stock', CURRENT_TIMESTAMP, 16);
 
 -- --------------------------------------------------------
 
@@ -467,7 +470,10 @@ INSERT INTO `product_variants` (`variant_id`, `product_id`, `sku`, `price`, `ima
 (10, 25, 'NIKE-BAG-35', 122000.00, NULL, '2026-04-30 22:36:50'),
 (11, 26, 'NIKE-BAG-10', 1000000.00, NULL, '2026-04-30 22:39:51'),
 (12, 26, 'NIKE-BAG-39', 1222222.00, NULL, '2026-04-30 22:39:51'),
-(13, 27, 'NIKE-SHIRT-22-30-XANH', 1500000.00, '1777589194_variant_0_fashion-portrait-young-elegant-woman (2).jpg', '2026-04-30 22:46:34');
+(13, 27, 'NIKE-SHIRT-22-30-XANH', 1500000.00, '1777589194_variant_0_fashion-portrait-young-elegant-woman (2).jpg', '2026-04-30 22:46:34'),
+(14, 3, 'ADI-UB22-40-WHT', 3100000.00, 'adidas_ultraboost_22.jpg', CURRENT_TIMESTAMP),
+(15, 3, 'ADI-UB22-41-WHT', 3100000.00, 'adidas_ultraboost_22.jpg', CURRENT_TIMESTAMP),
+(16, 13, 'ADI-UB-13-42', 3900000.00, 'adidas_ultraboost_22.jpg', CURRENT_TIMESTAMP);
 
 -- --------------------------------------------------------
 
@@ -488,7 +494,11 @@ CREATE TABLE `reviews` (
 --
 
 INSERT INTO `reviews` (`review_id`, `user_id`, `product_id`, `content`, `rating`) VALUES
-(1, 12, 12, 'lorem isum idalor lorem isum idalorlorem isum idalorlorem isum idalorlorem isum idalorlorem isum idalorlorem isum idalor', 5);
+(1, 12, 12, 'lorem isum idalor lorem isum idalorlorem isum idalorlorem isum idalorlorem isum idalorlorem isum idalorlorem isum idalor', 5),
+(2, 14, 13, 'Giày đi rất êm chân, giao hàng nhanh và đóng gói cẩn thận. Rất hài lòng với dịch vụ!', 5),
+(3, 12, 2, 'Màu sắc đẹp như hình, form chuẩn. Tuy nhiên đế hơi cứng một chút so với kỳ vọng.', 4),
+(4, 15, 3, 'Sản phẩm tuyệt vời, xứng đáng với giá tiền. Sẽ tiếp tục ủng hộ shop.', 5),
+(5, 14, 2, 'Hàng chính hãng, check code chuẩn. Shop tư vấn nhiệt tình.', 5);
 
 -- --------------------------------------------------------
 
@@ -581,7 +591,12 @@ INSERT INTO `variant_attributes` (`id`, `variant_id`, `attribute_name`, `attribu
 (18, 12, 'size', '34'),
 (19, 12, 'color', 'Xanh'),
 (20, 13, 'size', '30'),
-(21, 13, 'color', 'Xanh');
+(21, 13, 'color', 'Xanh'),
+(22, 14, 'size', '40'),
+(23, 14, 'color', 'White'),
+(24, 15, 'size', '41'),
+(25, 15, 'color', 'White'),
+(26, 16, 'size', '42');
 
 -- --------------------------------------------------------
 

@@ -151,6 +151,32 @@ class Controller
             }
         }
 
+        // Lấy danh sách đánh giá kèm thông tin người dùng
+        $ratingFilter = $_GET['rating_filter'] ?? 'all';
+        $reviewParams = ['id' => $id];
+        $reviewQuery = "SELECT r.*, u.name as user_name, u.avatar 
+                        FROM reviews r 
+                        JOIN users u ON r.user_id = u.user_id 
+                        WHERE r.product_id = :id";
+
+        if ($ratingFilter !== 'all') {
+            $reviewQuery .= " AND r.rating = :rating";
+            $reviewParams['rating'] = (int)$ratingFilter;
+        }
+
+        $reviewQuery .= " ORDER BY r.review_id DESC";
+        $rStmt = $db->prepare($reviewQuery);
+        $rStmt->execute($reviewParams);
+        $reviews = $rStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Lấy trung bình số sao và tổng số đánh giá từ database
+        $avgRatingQuery = "SELECT AVG(rating) as avg_rating, COUNT(review_id) as total_reviews FROM reviews WHERE product_id = :id";
+        $avgStmt = $db->prepare($avgRatingQuery);
+        $avgStmt->execute(['id' => $id]);
+        $ratingData = $avgStmt->fetch(PDO::FETCH_ASSOC);
+        $avgRating = round($ratingData['avg_rating'] ?? 0, 1);
+        $totalReviews = $ratingData['total_reviews'] ?? 0;
+
         include_once PROJECT_ROOT . '/components/header.php';
 
         if (!$product): ?>
@@ -181,7 +207,19 @@ class Controller
                     </div>
                     <div>
                         <h1 class="text-4xl font-bold mb-2"><?php echo $product['name']; ?></h1>
-                        <p class="text-gray-500 mb-6 uppercase tracking-wider text-sm"><?php echo $product['category_name']; ?> | <?php echo $product['manufacturer_name'] ?? 'Haseki Store'; ?></p>
+                        <p class="text-gray-500 mb-4 uppercase tracking-wider text-sm"><?php echo $product['category_name']; ?> | <?php echo $product['manufacturer_name'] ?? 'Haseki Store'; ?></p>
+                        
+                        <!-- Hiển thị đánh giá trung bình -->
+                        <div class="flex items-center gap-2 mb-6">
+                            <div class="flex text-yellow-400">
+                                <?php for ($i = 1; $i <= 5; $i++): ?>
+                                    <i class="ri-star-<?php echo ($i <= round($avgRating)) ? 'fill' : 'line'; ?>"></i>
+                                <?php endfor; ?>
+                            </div>
+                            <span class="text-sm font-bold text-gray-700"><?php echo $avgRating; ?>/5</span>
+                            <span class="text-sm text-gray-500">(<?php echo $totalReviews; ?> đánh giá)</span>
+                        </div>
+
                         <div class="text-3xl font-bold text-red-600 mb-6">
                             <?php echo number_format($product['discount_price'] ?? $product['price'], 0, ',', '.'); ?>₫
                             <?php if ($product['discount_price']): ?>
@@ -238,6 +276,159 @@ class Controller
                         </div>
                     </div>
                 </div>
+
+                <!-- Phần Đánh giá sản phẩm -->
+                <div class="mt-20 border-t pt-10">
+                    <h2 class="text-2xl font-bold mb-8">Đánh giá sản phẩm (<?php echo count($reviews); ?>)</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                        <!-- Danh sách đánh giá -->
+                        <div class="lg:col-span-2 space-y-8">
+                            <!-- Bộ lọc đánh giá -->
+                            <div class="flex flex-wrap gap-2 mb-8 items-center border-b pb-6">
+                                <span class="text-sm font-bold text-gray-500 mr-2 uppercase tracking-wider">Lọc xem:</span>
+                                <a href="index.php?action=detail&id=<?= $id ?>&rating_filter=all" 
+                                   data-rating="all"
+                                   class="filter-review-btn px-4 py-1.5 rounded-full text-sm font-medium border <?= $ratingFilter === 'all' ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black' ?> transition-all">
+                                    Tất cả
+                                </a>
+                                <?php for($i=5; $i>=1; $i--): ?>
+                                    <a href="index.php?action=detail&id=<?= $id ?>&rating_filter=<?= $i ?>" 
+                                       data-rating="<?= $i ?>"
+                                       class="filter-review-btn px-4 py-1.5 rounded-full text-sm font-medium border <?= (string)$ratingFilter === (string)$i ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black' ?> flex items-center gap-1 transition-all">
+                                        <?= $i ?> <i class="ri-star-fill text-yellow-400"></i>
+                                    </a>
+                                <?php endfor; ?>
+                            </div>
+
+                            <div id="reviews-list-container" class="space-y-8">
+                            <?php if (empty($reviews)): ?>
+                                <p class="text-gray-500 italic">Sản phẩm này chưa có đánh giá nào.</p>
+                            <?php else: ?>
+                                <?php foreach ($reviews as $review): ?>
+                                    <div class="flex gap-4 pb-6 border-b border-gray-100 last:border-0">
+                                        <img src="/web-shop-php/asset/<?php echo $review['avatar'] ?: 'default_avatar.png'; ?>" class="w-12 h-12 rounded-full object-cover">
+                                        <div class="flex-1">
+                                            <div class="flex justify-between items-center mb-1">
+                                                <h4 class="font-bold"><?php echo htmlspecialchars($review['user_name']); ?></h4>
+                                                <div class="flex text-yellow-400 text-sm">
+                                                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                        <i class="ri-star-<?php echo $i <= $review['rating'] ? 'fill' : 'line'; ?>"></i>
+                                                    <?php endfor; ?>
+                                                </div>
+                                            </div>
+                                            <p class="text-gray-600 text-sm leading-relaxed"><?php echo nl2br(htmlspecialchars($review['content'])); ?></p>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Form gửi đánh giá -->
+                        <div class="bg-gray-50 p-6 rounded-2xl h-fit">
+                            <h3 class="font-bold text-lg mb-4">Viết đánh giá của bạn</h3>
+                            <?php if (isset($_SESSION['user_id'])): ?>
+                                <form action="index.php?action=add_review" method="POST" class="space-y-4">
+                                    <input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>">
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Chọn số sao:</label>
+                                        <div class="flex gap-2 text-2xl text-gray-300" id="star-rating">
+                                            <input type="hidden" name="rating" id="rating-value" value="5" required>
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                <i class="ri-star-fill cursor-pointer transition-colors hover:text-yellow-400 star-btn text-yellow-400" data-value="<?php echo $i; ?>"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nội dung đánh giá:</label>
+                                        <textarea name="content" rows="4" class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-black outline-none transition-all" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..." required></textarea>
+                                    </div>
+
+                                    <button type="submit" class="w-full bg-black text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all">GỬI ĐÁNH GIÁ</button>
+                                </form>
+                            <?php else: ?>
+                                <div class="text-center py-4">
+                                    <p class="text-sm text-gray-500 mb-4">Bạn cần đăng nhập để viết đánh giá.</p>
+                                    <a href="index.php?action=login&redirect=detail&id=<?php echo $product['product_id']; ?>" class="inline-block bg-black text-white px-6 py-2 rounded-full text-sm font-bold">Đăng nhập ngay</a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const stars = document.querySelectorAll('.star-btn');
+                        const ratingInput = document.getElementById('rating-value');
+
+                        stars.forEach(star => {
+                            star.addEventListener('click', function() {
+                                const val = this.getAttribute('data-value');
+                                ratingInput.value = val;
+                                
+                                // Reset & Highlight
+                                stars.forEach((s, index) => {
+                                    if (index < val) {
+                                        s.classList.add('text-yellow-400');
+                                        s.classList.remove('text-gray-300');
+                                    } else {
+                                        s.classList.remove('text-yellow-400');
+                                        s.classList.add('text-gray-300');
+                                    }
+                                });
+                            });
+                        });
+
+                        // AJAX Filtering logic
+                        const filterBtns = document.querySelectorAll('.filter-review-btn');
+                        const reviewsContainer = document.getElementById('reviews-list-container');
+                        const productId = <?= $id ?>;
+
+                        filterBtns.forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const rating = this.getAttribute('data-rating');
+
+                                // Cập nhật trạng thái UI cho các nút
+                                filterBtns.forEach(b => {
+                                    b.classList.remove('bg-black', 'text-white', 'border-black');
+                                    b.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
+                                });
+                                this.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+                                this.classList.add('bg-black', 'text-white', 'border-black');
+
+                                // Gọi AJAX lấy dữ liệu
+                                fetch(`index.php?action=get_reviews&id=${productId}&rating_filter=${rating}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.length === 0) {
+                                            reviewsContainer.innerHTML = '<p class="text-gray-500 italic">Sản phẩm này chưa có đánh giá nào.</p>';
+                                        } else {
+                                            reviewsContainer.innerHTML = data.map(review => `
+                                                <div class="flex gap-4 pb-6 border-b border-gray-100 last:border-0">
+                                                    <img src="/web-shop-php/asset/${review.avatar || 'default_avatar.png'}" class="w-12 h-12 rounded-full object-cover">
+                                                    <div class="flex-1">
+                                                        <div class="flex justify-between items-center mb-1">
+                                                            <h4 class="font-bold">${review.user_name}</h4>
+                                                            <div class="flex text-yellow-400 text-sm">
+                                                                ${Array(5).fill(0).map((_, i) => `
+                                                                    <i class="ri-star-${i < review.rating ? 'fill' : 'line'}"></i>
+                                                                `).join('')}
+                                                            </div>
+                                                        </div>
+                                                        <p class="text-gray-600 text-sm leading-relaxed">${review.content.replace(/\n/g, '<br>')}</p>
+                                                    </div>
+                                                </div>
+                                            `).join('');
+                                        }
+                                    });
+                            });
+                        });
+                    });
+                </script>
             </main>
         <?php endif;
 
@@ -767,5 +958,85 @@ class Controller
                 'message' => 'Đã thêm vào danh sách yêu thích!'
             ]);
         }
+    }
+
+    public function search()
+    {
+        header('Content-Type: application/json');
+        $keyword = $_GET['keyword'] ?? '';
+        
+        if (strlen($keyword) < 2) {
+            echo json_encode([]);
+            return;
+        }
+
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $query = "SELECT product_id, name, price, discount_price, thumbnail 
+                  FROM products 
+                  WHERE name LIKE :keyword AND status = 'active' 
+                  LIMIT 5";
+        $stmt = $db->prepare($query);
+        $stmt->execute(['keyword' => "%$keyword%"]);
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode($products);
+    }
+
+    public function addReview()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
+            $user_id = $_SESSION['user_id'];
+            $product_id = $_POST['product_id'] ?? null;
+            $rating = $_POST['rating'] ?? 5;
+            $content = $_POST['content'] ?? '';
+
+            if ($product_id && $content) {
+                $database = new Database();
+                $db = $database->getConnection();
+
+                $query = "INSERT INTO reviews (user_id, product_id, content, rating) VALUES (?, ?, ?, ?)";
+                $stmt = $db->prepare($query);
+                $stmt->execute([$user_id, $product_id, $content, $rating]);
+
+                header("Location: index.php?action=detail&id=" . $product_id);
+                exit;
+            }
+        }
+        
+        header("Location: index.php");
+        exit;
+    }
+
+    public function getReviews()
+    {
+        header('Content-Type: application/json');
+        $id = $_GET['id'] ?? null;
+        $ratingFilter = $_GET['rating_filter'] ?? 'all';
+        
+        if (!$id) {
+            echo json_encode([]);
+            return;
+        }
+
+        $database = new Database();
+        $db = $database->getConnection();
+
+        $reviewParams = ['id' => $id];
+        $reviewQuery = "SELECT r.*, u.name as user_name, u.avatar 
+                        FROM reviews r 
+                        JOIN users u ON r.user_id = u.user_id 
+                        WHERE r.product_id = :id";
+
+        if ($ratingFilter !== 'all') {
+            $reviewQuery .= " AND r.rating = :rating";
+            $reviewParams['rating'] = (int)$ratingFilter;
+        }
+
+        $reviewQuery .= " ORDER BY r.review_id DESC";
+        $rStmt = $db->prepare($reviewQuery);
+        $rStmt->execute($reviewParams);
+        echo json_encode($rStmt->fetchAll(PDO::FETCH_ASSOC));
     }
 }

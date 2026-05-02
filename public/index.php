@@ -103,6 +103,15 @@ switch ($action) {
     case 'update_profile':
         $controller->updateProfile();
         break;
+    case 'search':
+        $controller->search();
+        break;
+    case 'add_review':
+        $controller->addReview();
+        break;
+    case 'get_reviews':
+        $controller->getReviews();
+        break;
     
     // --- ADMIN ROUTES ---
     
