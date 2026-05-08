@@ -1,6 +1,6 @@
 ### Run Client and Server (Nhập lên trình duyệt)
 ```
-http://localhost/web-shop-php/public/index.php
+http://localhost/H-S-Php/public/index.php
 ```
 
 ###  Tài khoản Admin
